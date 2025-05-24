@@ -1132,9 +1132,9 @@ export default function Profile() {
         setSavedAppIds([]); // Ensure state is empty on failure
         toast.error(t('Failed to load saved bet IDs.'));
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error fetching saved app IDs:', error);
-      toast.error(error.message || t('An error occurred while loading saved bet IDs.'));
+      //toast.error(error.message || t('An error occurred while loading saved bet IDs.'));
     }
   };
 
@@ -1178,7 +1178,7 @@ export default function Profile() {
 
       } catch (error: unknown) {
         console.error('Error fetching profile data:', error);
-        toast.error(error.message || t('An error occurred while loading profile data.'));
+        //toast.error(error.message || t('An error occurred while loading profile data.'));
       } finally {
         setLoading(false);
       }
@@ -1222,9 +1222,9 @@ export default function Profile() {
       }
 
       toast.success(t('Details updated successfully!'));
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error updating details:', error);
-      toast.error(error.message || t('An unexpected error occurred while updating details.'));
+      //toast.error(error.message || t('An unexpected error occurred while updating details.'));
     }
   };
 
@@ -1268,9 +1268,9 @@ export default function Profile() {
         newPassword: '',
         confirmPassword: '',
       }));
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error changing password:', error);
-      toast.error(error.message || t('An unexpected error occurred while changing password.'));
+      //toast.error(error.message || t('An unexpected error occurred while changing password.'));
     }
   };
 
@@ -1310,9 +1310,9 @@ export default function Profile() {
         window.location.href = '/';
       }, 2000);
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error deleting account:', error);
-      toast.error(error.message || t('An unexpected error occurred while deleting account.'));
+     // toast.error(error.message || t('An unexpected error occurred while deleting account.'));
       setShowDeleteConfirmation(false); // Hide confirmation on error
     }
   };
@@ -1354,9 +1354,9 @@ export default function Profile() {
       // Refetch the list to show the new entry
       await fetchSavedAppIds(); // Call the defined function
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error adding bet ID:', error);
-      toast.error(error.message || t('An unexpected error occurred while adding bet ID.'));
+      //toast.error(error.message || t('An unexpected error occurred while adding bet ID.'));
     }
   };
 
@@ -1383,9 +1383,9 @@ export default function Profile() {
       // Update state by filtering out the deleted item
       setSavedAppIds(prev => prev.filter(item => item.id !== id));
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error deleting bet ID:', error);
-      toast.error(error.message || t('An unexpected error occurred while deleting bet ID.'));
+      //toast.error(error.message || t('An unexpected error occurred while deleting bet ID.'));
     }
   };
 
