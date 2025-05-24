@@ -286,7 +286,7 @@ const resources = {
       "User Bet ID" : "Identifiant de pari utilisateur",
       "Enter your bet ID" : "Saisir votre identifiant de pari",
       "Add Bet ID" : "Ajouter un identifiant de pari",
-      "No bet IDs saved yet" : "Aucun identifiant de pari enregistré pour le moment"
+      "No bet IDs saved yet" : "Aucun identifiant de pari enregistré pour le moment",
       "Note": "Remarque",
       "To update your password, enter the old password and the new one you want to use": "Pour mettre à jour votre mot de passe, entrez l'ancien mot de passe et le nouveau que vous souhaitez utiliser",
       "Old Password": "Ancien mot de passe",
