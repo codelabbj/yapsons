@@ -26,6 +26,8 @@ const resources = {
 
       
       // Dashboard Header translations
+      "Welcome to our amazing platform" : "Welcome to our amazing platform",
+      "Discover incredible opportunities" : "Discover incredible opportunities",
       "DEPOSIT": "DEPOSIT",
       "WITHDRAW": "WITHDRAW",
       "Transaction History": "Transaction History",
@@ -76,6 +78,14 @@ const resources = {
       "Mobile Number": "Mobile Number",
       "Update Details": "Update Details",
       "Reset Password": "Reset Password",
+      "Add New Bet ID" : "Add New Bet ID",
+      "App Name" : "App Name",
+      "Select App" : "Select App",
+      "Saved Bet IDs" : "Saved Bet IDs",
+      "User Bet ID" : "User Bet ID",
+      "Enter your bet ID" : "Enter your bet ID",
+      "Add Bet ID" : "Add Bet ID",
+      "No bet IDs saved yet" : "No bet IDs saved yet",
       "Note": "Note",
       "To update your password, enter the old password and the new one you want to use": "To update your password, enter the old password and the new one you want to use",
       "Old Password": "Old Password",
@@ -170,7 +180,14 @@ const resources = {
       "Your account currency must be in XOF.": "Your account currency must be in XOF.",
       
       "Enter your ID": "Enter your ID",
+      "Enter or select your betting app ID" : "Enter or select your betting app ID",
       "This is your 1xbet user ID": "This is your 1xbet user ID",
+      "Enter your betting app ID or select from saved IDs." : "Enter your betting app ID or select from saved IDs.",
+      "You are entering a new ID. Defaulting to 1xbet app." : "You are entering a new ID. Defaulting to 1xbet app.",
+      "Saved IDs": "Saved IDs",
+      "Selected App": "Select App id",
+      "Betting App ID" : "Betting App ID",
+      "Unknown App" : "Unknown ",
       "Amount": "Amount",
       "Enter deposit amount": "Enter deposit amount",
       
@@ -209,11 +226,16 @@ const resources = {
 
 
       // Dashboard Header translations
+
       "DEPOSIT": "DÉPOSER",
       "WITHDRAW": "RETIRER",
       "Transaction History": "Historique des transactions",
       "Logout": "Déconnexion",
       "Hello": "Bonjour",
+
+      //Hero
+      "Welcome to our amazing platform" : "Bienvenue sur notre incroyable plateforme",
+      "Discover incredible opportunities" : "Découvrez des opportunités incroyables",
 
       // AuthForm translations
       "Welcome to Yapson": "Bienvenue sur Yapson",
@@ -257,6 +279,14 @@ const resources = {
       "Mobile Number": "Numéro de téléphone",
       "Update Details": "Mettre à jour les informations",
       "Reset Password": "Réinitialiser le mot de passe",
+      "Add New Bet ID" : "Ajouter un nouvel identifiant de pari",
+      "App Name" : "Nom de l'application",
+      "Select App" : "Sélectionner l'application",
+      "Saved Bet IDs" : "Identifiants de pari enregistrés",
+      "User Bet ID" : "Identifiant de pari utilisateur",
+      "Enter your bet ID" : "Saisir votre identifiant de pari",
+      "Add Bet ID" : "Ajouter un identifiant de pari",
+      "No bet IDs saved yet" : "Aucun identifiant de pari enregistré pour le moment"
       "Note": "Remarque",
       "To update your password, enter the old password and the new one you want to use": "Pour mettre à jour votre mot de passe, entrez l'ancien mot de passe et le nouveau que vous souhaitez utiliser",
       "Old Password": "Ancien mot de passe",
@@ -355,7 +385,15 @@ const resources = {
       "IMPORTANT": "IMPORTANT",
       "Your account currency must be in XOF.": "La devise de votre compte doit être en XOF.",
       
+      "Enter your 1xbet user ID": "Entrez votre ID utilisateur 1xbet",
       "Enter your ID": "Entrez votre ID",
+      "Enter or select your betting app ID" : "Entrez ou sélectionnez votre ID de l'application de paris",
+      "Enter your betting app ID or select from saved IDs.":" Entrez votre ID de l'application de paris ou sélectionnez-en un enregistré.",
+      "Selected App": "Sélectionnez l'ID",
+      "Saved IDs": "IDs enregistrés",
+      "Unknown App" : "Appareil inconnu",
+
+
       "This is your 1xbet user ID": "Ceci est votre ID utilisateur 1xbet",
       "Amount": "Montant",
       "Enter deposit amount": "Entrez le montant du dépôt",

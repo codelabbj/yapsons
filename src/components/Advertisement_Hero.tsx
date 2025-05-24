@@ -217,6 +217,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import Image from 'next/image'; // Import Next.js Image component
+import { useTranslation } from 'react-i18next';
+
 
 // Define the type for a single slide object
 interface Slide {
@@ -237,6 +239,7 @@ const SlidingHero = ({ baseUrl = 'https://api.yapson.net' }) => {
   const [error, setError] = useState<string | null>(null);
   // Type imageLoaded as a record mapping string IDs to boolean
   const [imageLoaded, setImageLoaded] = useState<Record<string, boolean>>({});
+  const { t } = useTranslation();
 
   // Fetch advertisements from API
   useEffect(() => {
@@ -275,14 +278,14 @@ const SlidingHero = ({ baseUrl = 'https://api.yapson.net' }) => {
           {
             id: 'demo-1',
             image: 'https://images.unsplash.com/photo-1557804506-669a67965ba0?w=1200&h=600&fit=crop',
-            content: 'Welcome to our amazing platform',
+            content: t('Welcome to our amazing platform'),
             created_at: new Date().toISOString(),
             enable: true
           },
           {
             id: 'demo-2',
             image: 'https://images.unsplash.com/photo-1551434678-e076c223a692?w=1200&h=600&fit=crop',
-            content: 'Discover incredible opportunities',
+            content: t('Discover incredible opportunities'),
             created_at: new Date().toISOString(),
             enable: true
           }
