@@ -288,9 +288,8 @@
 
 
 
-
 "use client";
-import { useState, useEffect, MouseEvent } from 'react'; // Import MouseEvent
+import { useState, useEffect } from 'react'; // Removed MouseEvent import from react
 import NotificationBell from './NotificationBell';
 import { User, Ticket, Menu, X, Download, Settings } from 'lucide-react';
 import Image from 'next/image';
@@ -348,7 +347,7 @@ const DashboardHeader = () => {
 
   // Close mobile menu when clicking outside
   useEffect(() => {
-    // Type the event parameter as MouseEvent
+    // Use the native DOM MouseEvent type
     const handleClickOutside = (event: MouseEvent) => {
       // Safely check if event.target is an Element before using closest
       if (showMobileMenu && event.target instanceof Element && !event.target.closest('.mobile-menu-container')) {
