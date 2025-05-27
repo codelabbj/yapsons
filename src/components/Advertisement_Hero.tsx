@@ -215,9 +215,9 @@
 
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+//import { ChevronLeft, ChevronRight } from 'lucide-react';
 import Image from 'next/image'; // Import Next.js Image component
-import { useTranslation } from 'react-i18next';
+//import { useTranslation } from 'react-i18next';
 
 
 // Define the type for a single slide object
@@ -230,6 +230,12 @@ interface Slide {
   // Add any other properties your API returns
 }
 
+interface Ad {
+  enable: boolean;
+  // ... 其他可能的属性
+}
+
+
 const SlidingHero = ({ baseUrl = 'https://api.yapson.net' }) => {
   // Use the Slide type for the slides state
   const [slides, setSlides] = useState<Slide[]>([]);
@@ -239,7 +245,7 @@ const SlidingHero = ({ baseUrl = 'https://api.yapson.net' }) => {
   const [error, setError] = useState<string | null>(null);
   // Type imageLoaded as a record mapping string IDs to boolean
   const [imageLoaded, setImageLoaded] = useState<Record<string, boolean>>({});
-  const { t } = useTranslation();
+  //const { t } = useTranslation();
 
   // Fetch advertisements from API
   useEffect(() => {
@@ -257,7 +263,7 @@ const SlidingHero = ({ baseUrl = 'https://api.yapson.net' }) => {
         const data = await response.json();
         // Ensure data.results is an array and contains objects matching Slide interface
         if (Array.isArray(data.results)) {
-            const enabledAds: Slide[] = data.results.filter((ad: any) => ad.enable); // Use 'any' temporarily if structure is uncertain, or refine filter type
+            const enabledAds: Slide[] = data.results.filter((ad: Ad) => ad.enable); // Use 'any' temporarily if structure is uncertain, or refine filter type
             setSlides(enabledAds);
         } else {
             console.error('API response results is not an array:', data);
@@ -277,15 +283,15 @@ const SlidingHero = ({ baseUrl = 'https://api.yapson.net' }) => {
         setSlides([
           {
             id: 'demo-1',
-            image: 'https://images.unsplash.com/photo-1557804506-669a67965ba0?w=1200&h=600&fit=crop',
-            content: t('Welcome to our amazing platform'),
+            image: '/HeroImage.jpg',
+            content: '',
             created_at: new Date().toISOString(),
             enable: true
           },
           {
             id: 'demo-2',
-            image: 'https://images.unsplash.com/photo-1551434678-e076c223a692?w=1200&h=600&fit=crop',
-            content: t('Discover incredible opportunities'),
+            image: '/HeroImage2.jpg',
+            content: '',
             created_at: new Date().toISOString(),
             enable: true
           }
@@ -309,13 +315,13 @@ const SlidingHero = ({ baseUrl = 'https://api.yapson.net' }) => {
     return () => clearInterval(interval);
   }, [slides.length]);
 
-  const nextSlide = useCallback(() => {
-    setCurrentSlide(prev => (prev + 1) % slides.length);
-  }, [slides.length]);
+  // const nextSlide = useCallback(() => {
+  //   setCurrentSlide(prev => (prev + 1) % slides.length);
+  // }, [slides.length]);
 
-  const prevSlide = useCallback(() => {
-    setCurrentSlide(prev => (prev - 1 + slides.length) % slides.length);
-  }, [slides.length]);
+  // const prevSlide = useCallback(() => {
+  //   setCurrentSlide(prev => (prev - 1 + slides.length) % slides.length);
+  // }, [slides.length]);
 
   const goToSlide = useCallback((index: number) => { // Explicitly type index
     setCurrentSlide(index);
@@ -358,7 +364,7 @@ const SlidingHero = ({ baseUrl = 'https://api.yapson.net' }) => {
   }
 
   return (
-    <div className="relative w-full h-64 md:h-96 lg:h-[500px] overflow-hidden bg-black">
+    <div className="w-full h-64 md:h-96 lg:h-[500px] overflow-hidden bg-black rounded-2xl shadow-lg">
       {/* Slides Container */}
       <div
         className="flex transition-transform duration-700 ease-in-out h-full"
@@ -392,9 +398,9 @@ const SlidingHero = ({ baseUrl = 'https://api.yapson.net' }) => {
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="text-center text-white px-4 max-w-4xl">
                 <h1 className="text-2xl md:text-4xl lg:text-6xl font-bold mb-4 leading-tight drop-shadow-lg">
-                  {slide.content || 'Welcome to Our Platform'}
+                  {slide.content}
                 </h1>
-                <div className="w-20 h-1 bg-gradient-to-r from-blue-400 to-purple-600 mx-auto rounded-full"></div>
+                {/* <div className="w-20 h-1 bg-gradient-to-r from-blue-400 to-purple-600 mx-auto rounded-full"></div> */}
               </div>
             </div>
           </div>
@@ -404,7 +410,7 @@ const SlidingHero = ({ baseUrl = 'https://api.yapson.net' }) => {
       {/* Navigation Arrows */}
       {slides.length > 1 && (
         <>
-          <button
+          {/* <button
             onClick={prevSlide}
             className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white p-2 md:p-3 rounded-full transition-all duration-300 hover:scale-110 z-10" // Added z-10 to ensure arrows are above images
             aria-label="Previous slide"
@@ -418,13 +424,13 @@ const SlidingHero = ({ baseUrl = 'https://api.yapson.net' }) => {
             aria-label="Next slide"
           >
             <ChevronRight className="w-5 h-5 md:w-6 md:h-6" />
-          </button>
+          </button> */}
         </>
       )}
 
       {/* Dots Indicator */}
-      {slides.length > 1 && (
-        <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 flex space-x-2 z-10"> {/* Added z-10 */}
+      {/* {slides.length > 1 && (
+        <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 flex space-x-2 z-10"> 
           {slides.map((_, index) => (
             <button
               key={index}
@@ -438,17 +444,17 @@ const SlidingHero = ({ baseUrl = 'https://api.yapson.net' }) => {
             />
           ))}
         </div>
-      )}
+      )} */}
 
       {/* Progress Bar */}
-      {slides.length > 1 && (
-        <div className="absolute bottom-0 left-0 w-full h-1 bg-white/20 z-10"> {/* Added z-10 */}
+      {/* {slides.length > 1 && (
+        <div className="absolute bottom-0 left-0 w-full h-1 bg-white/20 z-10"> 
           <div
             className="h-full bg-gradient-to-r from-blue-400 to-purple-600 transition-all duration-700 ease-in-out"
             style={{ width: `${((currentSlide + 1) / slides.length) * 100}%` }}
           />
         </div>
-      )}
+      )} */}
     </div>
   );
 };

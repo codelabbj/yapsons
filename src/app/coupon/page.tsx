@@ -258,6 +258,7 @@ import { useState, useEffect } from 'react';
 import Image from 'next/image'; // Import StaticImageData
 import Head from 'next/head';
 import { useTranslation } from 'react-i18next';
+import { useTheme } from '../../components/ThemeProvider'; // Adjust the import path as necessary
 //import { StaticImport } from 'next/dist/shared/lib/get-img-props';
 
 
@@ -277,6 +278,7 @@ const CouponPage = () => {
   // selectedImage can be a string (URL) or null
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const { t } = useTranslation();
+  const { theme } = useTheme(); // Use the theme from ThemeProvider
 
   // Replace with your actual base URL and token
   const BASE_URL = 'https://api.yapson.net';
@@ -290,7 +292,7 @@ const CouponPage = () => {
         return;
     }
     fetchCoupons(accessToken); // Pass accessToken to fetchCoupons
-  }, [t]); // Add t to dependency array as it comes from useTranslation
+  }, []); // Add t to dependency array as it comes from useTranslation
 
   // Accept accessToken as a parameter
   const fetchCoupons = async (accessToken: string) => {
@@ -407,19 +409,19 @@ const CouponPage = () => {
   return (
     <>
       <Head>
-        <title>Coupons - BetPay</title>
-        <meta name="description" content="View all available coupons from BetPay" />
+        <title>Coupons - Yapson</title>
+        <meta name="description" content="View all available coupons from yapson" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
 
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+      <div className={`min-h-screen  bg-gradient-to-br ${theme.colors.c_background}`}>
         {/* Header */}
-        <header className="bg-white shadow-sm border-b border-gray-200">
+        <header className={`bg-gradient-to-br ${theme.colors.a_background} shadow-sm border-b border-gray-200`}>
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-3xl font-bold text-gray-900">Available Coupons</h1>
-                <p className="text-gray-600 mt-1">Discover amazing deals and offers</p>
+                <h1 className="text-3xl font-bold ">Available Coupons</h1>
+                {/* <p className=" mt-1">Discover amazing deals and offers</p> */}
               </div>
               <button
                 onClick={() => {
@@ -431,7 +433,7 @@ const CouponPage = () => {
                       window.location.href = '/';
                    }
                 }}
-                className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200 flex items-center gap-2"
+                className={`bg-gradient-to-br ${theme.colors.c_background} ${theme.colors.hover} text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200 flex items-center gap-2`}
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -439,7 +441,17 @@ const CouponPage = () => {
                 Refresh
               </button>
             </div>
+           
           </div>
+          <button
+            onClick={() => window.history.back()}
+            className="flex items-center text-md font-medium  dark:text-gray-300 dark:hover:text-white  px-4 py-2 rounded-lg shadow-sm transition-all duration-200"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            {t("Back")}
+          </button>
         </header>
 
         {/* Main Content */}
@@ -451,8 +463,8 @@ const CouponPage = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
                 </svg>
               </div>
-              <h3 className="text-xl font-medium text-gray-900 mb-2">No Coupons Available</h3>
-              <p className="text-gray-600">Check back later for new deals and offers!</p>
+              <h3 className="text-xl font-medium  mb-2">No Coupons Available</h3>
+              <p className="">Check back later for new deals and offers!</p>
             </div>
           ) : (
             <div className="space-y-8">

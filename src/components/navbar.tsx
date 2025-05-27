@@ -1,6 +1,6 @@
 import Image from "next/image";
 import ThemeToggle from '../components/ThemeToggle';
-import LanguageToggle from "./LanguageToggle";
+//import LanguageToggle from "./LanguageToggle";
 export default function Nav() {
     return(
         <nav className="p-6 flex justify-between items-center border-b">
@@ -18,7 +18,7 @@ export default function Nav() {
                  <ThemeToggle /> 
         
             {/* Language Toggle Button */}
-                <LanguageToggle />
+                {/* <LanguageToggle /> */}
 
         
             </div>

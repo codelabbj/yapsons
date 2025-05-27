@@ -1043,30 +1043,30 @@ const BASE_URL = 'https://api.yapson.net';
 // Example: /api/auth/me, /api/auth/edit, /api/auth/change_password, /api/auth/delete_account
 // Example: /api/yapson/app_name, /api/yapson/id_link
 
-interface App {
-  id: string;
-  name: string;
-  image: string;
-  is_active: boolean;
-  hash: string;
-  cashdeskid: string;
-  cashierpass: string;
-  order: string | null;
-  city: string;
-  street: string;
-  deposit_tuto_content: string;
-  deposit_link: string;
-  withdrawal_tuto_content: string;
-  withdrawal_link: string;
-  public_name: string;
-}
+// interface App {
+//   id: string;
+//   name: string;
+//   image: string;
+//   is_active: boolean;
+//   hash: string;
+//   cashdeskid: string;
+//   cashierpass: string;
+//   order: string | null;
+//   city: string;
+//   street: string;
+//   deposit_tuto_content: string;
+//   deposit_link: string;
+//   withdrawal_tuto_content: string;
+//   withdrawal_link: string;
+//   public_name: string;
+// }
 
-interface IdLink {
-  id: string;
-  user: string;
-  link: string;
-  app_name: App; // Ensure this is the full App object as per your interface
-}
+// interface IdLink {
+//   id: string;
+//   user: string;
+//   link: string;
+//   app_name: App; // Ensure this is the full App object as per your interface
+// }
 
 export default function Profile() {
   const { t } = useTranslation();
@@ -1076,7 +1076,7 @@ export default function Profile() {
     firstName: '',
     lastName: '',
     email: '',
-    phoneCode: '+229', // Default or fetched phone code
+    phoneCode: '', // Default or fetched phone code
     phoneNumber: '',
     oldPassword: '',
     newPassword: '',
@@ -1090,53 +1090,53 @@ export default function Profile() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
 
-  const [savedAppIds, setSavedAppIds] = useState<IdLink[]>([]);
-  const [newAppIdLink, setNewAppIdLink] = useState('');
-  const [selectedAppId, setSelectedAppId] = useState(''); // Store selected app ID
-  const [apps, setApps] = useState<App[]>([]); // List of available apps
+  // const [savedAppIds, setSavedAppIds] = useState<IdLink[]>([]);
+  // const [newAppIdLink, setNewAppIdLink] = useState('');
+  // const [selectedAppId, setSelectedAppId] = useState(''); // Store selected app ID
+  // const [apps, setApps] = useState<App[]>([]); // List of available apps
 
   // Function to fetch saved app IDs
-  const fetchSavedAppIds = async () => {
-    const token = localStorage.getItem('accessToken');
-    if (!token) {
-      // Handle case where token is missing if this function is called independently
-      console.error("Access token not found for fetching saved app IDs.");
-      setSavedAppIds([]); // Clear saved IDs if not authenticated
-      return;
-    }
-    try {
-      const appIdsResponse = await fetch(`${BASE_URL}/yapson/id_link`, {
-        headers: { Authorization: `Bearer ${token}`, },
-      });
+  // const fetchSavedAppIds = async () => {
+  //   const token = localStorage.getItem('accessToken');
+  //   if (!token) {
+  //     // Handle case where token is missing if this function is called independently
+  //     console.error("Access token not found for fetching saved app IDs.");
+  //     setSavedAppIds([]); // Clear saved IDs if not authenticated
+  //     return;
+  //   }
+  //   try {
+  //     const appIdsResponse = await fetch(`${BASE_URL}/yapson/id_link`, {
+  //       headers: { Authorization: `Bearer ${token}`, },
+  //     });
 
-      if (appIdsResponse.ok) {
-        const appIdsData = await appIdsResponse.json();
-        let processedData: IdLink[] = [];
-        if (Array.isArray(appIdsData)) {
-          processedData = appIdsData;
-        } else if (appIdsData && Array.isArray(appIdsData.results)) {
-          processedData = appIdsData.results; // Handle paginated response
-        } else if (appIdsData && Array.isArray(appIdsData.data)) {
-          processedData = appIdsData.data; // Handle other data structures
-        } else if (appIdsData && typeof appIdsData === 'object') {
-           // Handle case where a single object might be returned (less common for a list)
-           // Ensure it conforms to IdLink structure or skip
-           if (appIdsData.id && appIdsData.link && appIdsData.app_name) {
-              processedData = [appIdsData as IdLink];
-           }
-        }
-        setSavedAppIds(processedData);
+  //     if (appIdsResponse.ok) {
+  //       const appIdsData = await appIdsResponse.json();
+  //       let processedData: IdLink[] = [];
+  //       if (Array.isArray(appIdsData)) {
+  //         processedData = appIdsData;
+  //       } else if (appIdsData && Array.isArray(appIdsData.results)) {
+  //         processedData = appIdsData.results; // Handle paginated response
+  //       } else if (appIdsData && Array.isArray(appIdsData.data)) {
+  //         processedData = appIdsData.data; // Handle other data structures
+  //       } else if (appIdsData && typeof appIdsData === 'object') {
+  //          // Handle case where a single object might be returned (less common for a list)
+  //          // Ensure it conforms to IdLink structure or skip
+  //          if (appIdsData.id && appIdsData.link && appIdsData.app_name) {
+  //             processedData = [appIdsData as IdLink];
+  //          }
+  //       }
+  //       setSavedAppIds(processedData);
 
-      } else {
-        console.error('Failed to fetch saved app IDs:', appIdsResponse.status);
-        setSavedAppIds([]); // Ensure state is empty on failure
-        toast.error(t('Failed to load saved bet IDs.'));
-      }
-    } catch (error: unknown) {
-      console.error('Error fetching saved app IDs:', error);
-      //toast.error(error.message || t('An error occurred while loading saved bet IDs.'));
-    }
-  };
+  //     } else {
+  //       console.error('Failed to fetch saved app IDs:', appIdsResponse.status);
+  //       setSavedAppIds([]); // Ensure state is empty on failure
+  //       toast.error(t('Failed to load saved bet IDs.'));
+  //     }
+  //   } catch (error: unknown) {
+  //     console.error('Error fetching saved app IDs:', error);
+  //     //toast.error(error.message || t('An error occurred while loading saved bet IDs.'));
+  //   }
+  // };
 
 
   // Fetch user profile, apps, and saved app IDs on mount
@@ -1166,15 +1166,15 @@ export default function Profile() {
         }));
 
         // Fetch available apps
-        const appsResponse = await fetch(`${BASE_URL}/yapson/app_name`, {
-          headers: { Authorization: `Bearer ${token}`, },
-        });
-        if (!appsResponse.ok) throw new Error(t('Failed to fetch apps list'));
-        const appsData = await appsResponse.json();
-        setApps(appsData);
+        // const appsResponse = await fetch(`${BASE_URL}/yapson/app_name`, {
+        //   headers: { Authorization: `Bearer ${token}`, },
+        // });
+        // if (!appsResponse.ok) throw new Error(t('Failed to fetch apps list'));
+        // const appsData = await appsResponse.json();
+        // setApps(appsData);
 
-        // Fetch saved app IDs using the new function
-        await fetchSavedAppIds();
+        // // Fetch saved app IDs using the new function
+        // await fetchSavedAppIds();
 
       } catch (error: unknown) {
         console.error('Error fetching profile data:', error);
@@ -1318,76 +1318,76 @@ export default function Profile() {
   };
 
 
-  const handleAddAppId = async () => {
-    if (!newAppIdLink || !selectedAppId) {
-      toast.warn(t('Please select an app and enter a bet ID.'));
-      return;
-    }
+  // const handleAddAppId = async () => {
+  //   if (!newAppIdLink || !selectedAppId) {
+  //     toast.warn(t('Please select an app and enter a bet ID.'));
+  //     return;
+  //   }
 
-    const token = localStorage.getItem('accessToken');
-    if (!token) {
-      toast.error(t('You must be logged in.'));
-      return;
-    }
+  //   const token = localStorage.getItem('accessToken');
+  //   if (!token) {
+  //     toast.error(t('You must be logged in.'));
+  //     return;
+  //   }
 
-    try {
-      const response = await fetch(`${BASE_URL}/yapson/id_link`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          link: newAppIdLink,
-          app_name_id: selectedAppId // Send the selected app ID
-        }),
-      });
+  //   try {
+  //     const response = await fetch(`${BASE_URL}/yapson/id_link`, {
+  //       method: 'POST',
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //         Authorization: `Bearer ${token}`,
+  //       },
+  //       body: JSON.stringify({
+  //         link: newAppIdLink,
+  //         app_name_id: selectedAppId // Send the selected app ID
+  //       }),
+  //     });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || t('Failed to add bet ID'));
-      }
+  //     if (!response.ok) {
+  //       const errorData = await response.json();
+  //       throw new Error(errorData.message || t('Failed to add bet ID'));
+  //     }
 
-      toast.success(t('Bet ID added successfully!'));
-      setNewAppIdLink('');
-      setSelectedAppId(''); // Clear selected app
-      // Refetch the list to show the new entry
-      await fetchSavedAppIds(); // Call the defined function
+  //     toast.success(t('Bet ID added successfully!'));
+  //     setNewAppIdLink('');
+  //     setSelectedAppId(''); // Clear selected app
+  //     // Refetch the list to show the new entry
+  //     await fetchSavedAppIds(); // Call the defined function
 
-    } catch (error: unknown) {
-      console.error('Error adding bet ID:', error);
-      //toast.error(error.message || t('An unexpected error occurred while adding bet ID.'));
-    }
-  };
+  //   } catch (error: unknown) {
+  //     console.error('Error adding bet ID:', error);
+  //     //toast.error(error.message || t('An unexpected error occurred while adding bet ID.'));
+  //   }
+  // };
 
-  const handleDeleteAppId = async (id: string) => {
-    const token = localStorage.getItem('accessToken');
-    if (!token) {
-      toast.error(t('You must be logged in.'));
-      return;
-    }
+  // const handleDeleteAppId = async (id: string) => {
+  //   const token = localStorage.getItem('accessToken');
+  //   if (!token) {
+  //     toast.error(t('You must be logged in.'));
+  //     return;
+  //   }
 
-    try {
-      const response = await fetch(`${BASE_URL}/yapson/id_link/${id}`, {
-        method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+  //   try {
+  //     const response = await fetch(`${BASE_URL}/yapson/id_link/${id}`, {
+  //       method: 'DELETE',
+  //       headers: {
+  //         Authorization: `Bearer ${token}`,
+  //       },
+  //     });
 
-      if (!response.ok) {
-        throw new Error(t('Failed to delete bet ID'));
-      }
+  //     if (!response.ok) {
+  //       throw new Error(t('Failed to delete bet ID'));
+  //     }
 
-      toast.success(t('Bet ID deleted successfully!'));
-      // Update state by filtering out the deleted item
-      setSavedAppIds(prev => prev.filter(item => item.id !== id));
+  //     toast.success(t('Bet ID deleted successfully!'));
+  //     // Update state by filtering out the deleted item
+  //     setSavedAppIds(prev => prev.filter(item => item.id !== id));
 
-    } catch (error: unknown) {
-      console.error('Error deleting bet ID:', error);
-      //toast.error(error.message || t('An unexpected error occurred while deleting bet ID.'));
-    }
-  };
+  //   } catch (error: unknown) {
+  //     console.error('Error deleting bet ID:', error);
+  //     //toast.error(error.message || t('An unexpected error occurred while deleting bet ID.'));
+  //   }
+  // };
 
 
   const handleLogout = () => {
@@ -1678,90 +1678,6 @@ export default function Profile() {
                 {t("Update Details")}
               </button>
             </div>
-
-            {/* App IDs Management Section */}
-            <div className={`bg-gradient-to-br ${theme.colors.a_background} rounded-xl shadow-sm p-6 mb-20`}>
-              <div className="flex items-center mb-6">
-                <div className={`p-3 bg-gradient-to-br ${theme.colors.a_background} rounded-full mr-4`}>
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h.01M 9 12 12h.01M16 12h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-                <h2 className="text-xl font-bold">{t("Betting App IDs")}</h2>
-              </div>
-
-              {/* Add new App ID */}
-              <div className={`bg-gradient-to-br ${theme.colors.c_background} p-4 rounded-lg mb-6`}>
-                <h3 className="font-semibold mb-4">{t("Add New Bet ID")}</h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-2">{t("App Name")}</label>
-                    <select
-                      value={selectedAppId}
-                      onChange={(e) => setSelectedAppId(e.target.value)}
-                      className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-                    >
-                      <option value="">{t("Select App")}</option>
-                      {apps.map((app) => (
-                        <option key={app.id} value={app.id}>
-                         {app.public_name || app.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-2">{t("User Bet ID")}</label>
-                    <input
-                      type="text"
-                      value={newAppIdLink}
-                      onChange={(e) => setNewAppIdLink(e.target.value)}
-                      className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-                      placeholder={t("Enter your bet ID")}
-                    />
-                  </div>
-                  <div className="flex items-end">
-                    <button
-                      onClick={handleAddAppId}
-                      className="w-full px-4 py-3 bg-orange-600 hover:bg-orange-700 text-white font-medium rounded-lg transition-all duration-200"
-                    >
-                      {t("Add Bet ID")}
-                    </button>
-                  </div>
-                </div>
-              </div>
-              {/* Saved App IDs */}
-
-            <div>
-              <h3 className="font-semibold mb-4">{t("Saved Bet IDs")}</h3>
-              {!savedAppIds || savedAppIds.length === 0 ? (
-                <p className="text-gray-500 text-center py-4">{t("No bet IDs saved yet")}</p>
-              ) : (
-                <div className="space-y-3">
-                  {Array.isArray(savedAppIds) && savedAppIds.length > 0 && savedAppIds.map((item) => {
-                    // Directly use the app_name object from the item
-                    const appName = item.app_name?.public_name || item.app_name?.name || 'Unknown App';
-                    return (
-                      <div key={item.id} className={`${theme.colors.background} flex items-center justify-between p-3 rounded-lg`}>
-                        <div>
-                          <span className="font-medium">{appName}</span>
-                          <span className="ml-2">- {item.link}</span>
-                        </div>
-                      <button
-                        onClick={() => handleDeleteAppId(item.id)}
-                        className="text-red-500 hover:text-red-700 p-1"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                      </button>
-                    </div>
-                      );
-                    })}
-                </div>
-              )}
-            </div>
-            </div>
-
 
             {/* Password Section */}
             <div className={`bg-gradient-to-br ${theme.colors.a_background} rounded-xl shadow-sm p-6 mb-20`}>

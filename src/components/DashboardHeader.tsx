@@ -291,10 +291,10 @@
 "use client";
 import { useState, useEffect } from 'react'; // Removed MouseEvent import from react
 import NotificationBell from './NotificationBell';
-import { User, Ticket, Menu, X, Download, Settings } from 'lucide-react';
+import { User, Menu, X, Download} from 'lucide-react';
 import Image from 'next/image';
 import ThemeToggle from './ThemeToggle';
-import LanguageToggle from './LanguageToggle';
+//import LanguageToggle from './LanguageToggle';
 import { useTranslation } from 'react-i18next';
 import axios from 'axios';
 
@@ -379,6 +379,9 @@ const DashboardHeader = () => {
           <p className="text-sm hidden sm:block">
             {t("Hello")}, <span className="text-orange-500 font-medium">{userName || 'User'}</span>!
           </p>
+          <p className="text-sm block sm:hidden">
+            {t("Yapson")}
+          </p>
         </div>
 
         {/* Desktop Navigation */}
@@ -393,12 +396,12 @@ const DashboardHeader = () => {
             <span>{t("Télécharger l'application")}</span>
           </button>
 
-          <a href='/coupon' className="p-2 hover:bg-gray-800 rounded-lg transition-colors">
+          {/* <a href='/coupon' className="p-2 hover:bg-gray-800 rounded-lg transition-colors">
             <Ticket size={20} />
-          </a>
+          </a> */}
 
           <ThemeToggle />
-          <LanguageToggle />
+          {/* <LanguageToggle /> */}
 
           <div className={`relative ${showNotification ? 'animate-bounce' : ''} ${pulseNotification ? 'animate-pulse' : ''}`}>
             <NotificationBell />
@@ -413,9 +416,9 @@ const DashboardHeader = () => {
         {/* Mobile Navigation */}
         <div className="md:hidden flex items-center gap-2">
           {/* Language Toggle */}
-          <div className="p-1">
+          {/* <div className="p-1">
             <LanguageToggle />
-          </div>
+          </div> */}
 
           {/* Notifications */}
           <div className={`relative p-1 ${showNotification ? 'animate-bounce' : ''} ${pulseNotification ? 'animate-pulse' : ''}`}>
@@ -476,7 +479,7 @@ const DashboardHeader = () => {
               </button>
 
               {/* Coupons */}
-              <a
+              {/* <a
                 href='/coupon'
                 onClick={() => setShowMobileMenu(false)}
                 className="w-full px-4 py-3 flex items-center gap-3 hover:bg-gray-800 transition-colors group"
@@ -487,7 +490,7 @@ const DashboardHeader = () => {
                 <span className="text-gray-300 group-hover:text-white transition-colors">
                   {t("Coupons")}
                 </span>
-              </a>
+              </a> */}
 
               {/* Profile */}
               <a
@@ -521,17 +524,17 @@ const DashboardHeader = () => {
               {/* Settings Section */}
               <div className="px-4 py-2">
                 <p className="text-xs text-gray-500 uppercase tracking-wider font-medium mb-2">
-                  {t("Settings")}
+                  {t("Theme")}
                 </p>
 
                 {/* Theme Toggle */}
                 <div className="flex items-center justify-between py-2">
-                  <div className="flex items-center gap-3">
+                  {/* <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-lg bg-indigo-500/20 flex items-center justify-center">
                       <Settings size={16} className="text-indigo-500" />
                     </div>
                     <span className="text-gray-300 text-sm">{t("Theme")}</span>
-                  </div>
+                  </div> */}
                   <ThemeToggle />
                 </div>
 

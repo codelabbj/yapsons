@@ -322,13 +322,13 @@
 
 'use client';
 import { useState, useEffect } from 'react';
-import Head from 'next/head';
-import axios, { AxiosError } from 'axios';
+//import Head from 'next/head';
+import axios from 'axios';
 import { useTranslation } from 'react-i18next';
 //import styles from '../styles/Deposits.module.css';
-import { ClipboardIcon } from 'lucide-react'; // Make sure to install this package
+//import { ClipboardIcon } from 'lucide-react'; // Make sure to install this package
 //import { Transaction } from 'mongodb';
-import DashboardHeader from '@/components/DashboardHeader';
+//import DashboardHeader from '@/components/DashboardHeader';
 import { useTheme } from '@/components/ThemeProvider';
 
 //import { Transaction } from 'mongodb';
@@ -386,27 +386,27 @@ interface TransactionDetail {
   transaction: Transaction;
 }
 
-interface ErrorResponse {
+// interface ErrorResponse {
 
-  data?: {
-    [key: string]: string[] | string | undefined;
-    detail?: string;
-    message?: string;
-  };
-  status?: number;
-}
+//   data?: {
+//     [key: string]: string[] | string | undefined;
+//     detail?: string;
+//     message?: string;
+//   };
+//   status?: number;
+// }
 export default function Deposits() {
   const { t } = useTranslation();
-
+  const [currentStep, setCurrentStep] = useState<'selectId' | 'selectNetwork' | 'enterDetails'>('selectId');
+  const [selectedId, setSelectedId] = useState<IdLink | null>(null);
+  const [selectedNetwork, setSelectedNetwork] = useState<{ id: string; name: string; image?: string } | null>(null);
   const [formData, setFormData] = useState({
-    id: '', // This will hold the user's entered or selected bet ID
     amount: '',
-    number: '',
-    network: ''
+    phoneNumber: ''
   });
-
+  
   const [networks, setNetworks] = useState<{ id: string; name: string; image?: string }[]>([]);
-  const [apps, setApps] = useState<App[]>([]); // Use the full App interface here
+  const [savedAppIds, setSavedAppIds] = useState<IdLink[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -414,861 +414,346 @@ export default function Deposits() {
   const [selectedTransaction, setSelectedTransaction] = useState<TransactionDetail | null>(null);
   const { theme } = useTheme();
 
-  // State for saved app IDs and suggestions
-  const [savedAppIds, setSavedAppIds] = useState<IdLink[]>([]); // Use the updated IdLink interface
-  const [showSuggestions, setShowSuggestions] = useState(false);
-  const [filteredSuggestions, setFilteredSuggestions] = useState<IdLink[]>([]);
-  // State to hold the selected saved IdLink for the deposit
-  const [selectedSavedIdLink, setSelectedSavedIdLink] = useState<IdLink | null>(null);
 
-
-  // Fetch networks, apps, and saved app IDs data on component mount
+  // Fetch networks and saved app IDs on component mount
   useEffect(() => {
     const fetchData = async () => {
-      const token = localStorage.getItem('accessToken'); // Retrieve the token from localStorage
+      const token = localStorage.getItem('accessToken');
       if (!token) {
         setError(t('You must be logged in to access this feature.'));
         setLoading(false);
-        window.location.href = '/'; // Redirect to login page if token is not found
+        window.location.href = '/';
         return;
       }
 
       try {
+        // Fetch networks
         const networksResponse = await axios.get('https://api.yapson.net/yapson/network/', {
-          headers: {
-            Authorization: `Bearer ${token}` // Include the token in the headers
-          }
+          headers: { Authorization: `Bearer ${token}` }
         });
         setNetworks(networksResponse.data);
 
-        // Fetch available apps (needed to link saved IDs to app details)
-        const appsResponse = await axios.get('https://api.yapson.net/yapson/app_name', {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setApps(appsResponse.data);
-
-
         // Fetch saved app IDs
         const savedIdsResponse = await axios.get('https://api.yapson.net/yapson/id_link', {
-         headers: {
-          Authorization: `Bearer ${token}`
-          }
-       });
-       // Assuming the API returns an array of IdLink objects directly or within a 'results'/'data' field
-       let processedData: IdLink[] = [];
-       if (Array.isArray(savedIdsResponse.data)) {
-         processedData = savedIdsResponse.data;
-       } else if (savedIdsResponse.data && Array.isArray(savedIdsResponse.data.results)) {
-         processedData = savedIdsResponse.data.results; // Handle paginated response
-       } else if (savedIdsResponse.data && Array.isArray(savedIdsResponse.data.data)) {
-         processedData = savedIdsResponse.data.data; // Handle other data structures
-       } else if (savedIdsResponse.data && typeof savedIdsResponse.data === 'object') {
-          // Handle case where a single object might be returned (less common for a list)
-          // Ensure it conforms to IdLink structure or skip
-          if (savedIdsResponse.data.id && savedIdsResponse.data.link && savedIdsResponse.data.app_name) {
-             processedData = [savedIdsResponse.data as IdLink];
-          }
-       }
-       console.log("Fetched Saved App IDs:", processedData); // Log fetched saved IDs
-       setSavedAppIds(processedData);
-
-
-      } catch (err: unknown) { // Use unknown for caught errors
-        console.error(t('Error fetching data:'), err);
-        if (err instanceof Error) { // Type guard
-           setError(err.message || t('Failed to load necessary data. Please try again later.'));
-        } else {
-           setError(t('Failed to load necessary data. Please try again later.'));
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        let processedData: IdLink[] = [];
+        if (Array.isArray(savedIdsResponse.data)) {
+          processedData = savedIdsResponse.data;
+        } else if (savedIdsResponse.data?.results) {
+          processedData = savedIdsResponse.data.results;
+        } else if (savedIdsResponse.data?.data) {
+          processedData = savedIdsResponse.data.data;
         }
+        
+        setSavedAppIds(processedData);
+      } catch (err) {
+        console.error('Error fetching data:', err);
+        setError(t('Failed to load data. Please try again later.'));
       } finally {
         setLoading(false);
       }
     };
 
     fetchData();
-  }, [t]);
+  }, []);
 
-  // Filter suggestions based on input value
-  useEffect(() => {
-    if (formData.id) {
-      const filtered = savedAppIds.filter(item =>
-        item.link.toLowerCase().includes(formData.id.toLowerCase()) ||
-        item.app_name?.name?.toLowerCase().includes(formData.id.toLowerCase()) ||
-        item.app_name?.public_name?.toLowerCase().includes(formData.id.toLowerCase())
-      );
-      setFilteredSuggestions(filtered);
-    } else {
-      setFilteredSuggestions(savedAppIds); // Show all saved IDs when input is empty
-    }
-  }, [formData.id, savedAppIds]);
+  const handleIdSelect = (idLink: IdLink) => {
+    setSelectedId(idLink);
+    setCurrentStep('selectNetwork');
+  };
 
+  const handleNetworkSelect = (network: { id: string; name: string; image?: string }) => {
+    setSelectedNetwork(network);
+    setCurrentStep('enterDetails');
+  };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData(prevState => ({
-      ...prevState,
+    setFormData(prev => ({
+      ...prev,
       [name]: value
     }));
-    // Clear selectedSavedIdLink when the user types
-    setSelectedSavedIdLink(null);
-    // Suggestions will be filtered by the useEffect hook
   };
 
-  const handleNetworkSelect = (networkName: string) => {
-    setFormData(prevState => ({
-      ...prevState,
-      network: networkName
-    }));
-  };
-
-  // Handler for selecting a suggestion
-  const handleSelectSuggestion = (item: IdLink) => {
-    setFormData(prev => ({ ...prev, id: item.link })); // Set the input value to the saved link
-    setSelectedSavedIdLink(item); // Store the selected IdLink object
-    setShowSuggestions(false); // Hide suggestions
-  };
-
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleString();
-  };
-
-  const formatStatus = (status: string) => {
-    return status.charAt(0).toUpperCase() + status.slice(1);
-  };
-
-  const getTransactionTypeIcon = (type: string) => {
-    if (type === "deposit") {
-      return <span className="text-red-700">↓</span>;
-    } else {
-      return <span className="text-gray-700">↑</span>;
-    }
-  };
-
-  const closeTransactionDetails = () => {
-    setIsModalOpen(false);
-    setSelectedTransaction(null);
-  };
-
-  const showTransactionDetails = (transaction: Transaction) => {
-    setSelectedTransaction({ transaction });
-    setIsModalOpen(true);
-  };
-
-  const extractErrorMessage = (error: AxiosError<ErrorResponse>): string => {
-    // If the error response has data with field-specific errors
-    if (error.response && error.response.data) {
-      const data = error.response.data as unknown as Record<string, unknown>;
-
-      // Check if the error is in the format { "amount": ["Minimum deposit is 200.00 F CFA"] }
-      for (const field in data) {
-        if (Array.isArray(data[field]) && data[field].length > 0) {
-          return data[field][0] as string; // Cast to string
-        }
-      }
-
-      // Check if there's a general error message
-      if ('detail' in data && typeof data.detail === 'string') {
-        return data.detail;
-      }
-
-      // Check if there's a general error message as string
-      if (typeof data === 'string') {
-        return data;
-      }
-
-      // Handle the case when there's a message about waiting between transactions
-      if ('message' in data && typeof data.message === 'string' && data.message.includes('wait')) {
-        return data.message;
-      }
-    }
-
-    // Default error message
-    return t('An error occurred. Please try again later.');
-  };
-
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!selectedId || !selectedNetwork) return;
+    
     setLoading(true);
-    setError('');
-    setSuccess('');
-
-    const token = localStorage.getItem('accessToken'); // Retrieve the token from localStorage
-    if (!token) {
-      setError(t('You must be logged in to access this feature.'));
-      setLoading(false);
-      return;
-    }
-
-    if (!formData.network) {
-      setError(t('Please select a network'));
-      setLoading(false);
-      return;
-    }
-
-    if (!formData.id) {
-       setError(t('Please enter or select a Bet ID'));
-       setLoading(false);
-       return;
-    }
-
-    // Determine app_id and user_app_id based on whether a saved ID was selected
-    let appIdToSend: string;
-    let userAppIdToSend: string;
-
-    if (selectedSavedIdLink) {
-        // If a saved ID was selected from suggestions
-        appIdToSend = selectedSavedIdLink.app_name.id;
-        userAppIdToSend = selectedSavedIdLink.link;
-        console.log("Using selected saved ID:", selectedSavedIdLink); // Log selected saved ID
-    }else {
-        // If the user typed an ID that wasn't selected from suggestions
-        // Try to find if the typed ID matches any saved ID's link
-        const matchedSavedId = savedAppIds.find(item => item.link === formData.id);
-
-        if (matchedSavedId) {
-            // If the typed ID matches a saved ID, use that app's info
-            appIdToSend = matchedSavedId.app_name.id;
-            userAppIdToSend = matchedSavedId.link; // Use the typed ID (which matches the saved link)
-            console.log("Typed ID matches saved ID, using app:", matchedSavedId.app_name); } 
-
-        else {
-        // If the user typed an ID that wasn't selected from suggestions
-        // We need a way to determine the app_id for this manually entered ID.
-        // Currently, there's no UI element to select the app for a new ID.
-        // For now, we'll default to 1xbet as in the original code,
-        // but you should consider adding an app selection dropdown if needed.
-        console.log("Typed ID does not match saved ID, trying to find 1xbet app in:", apps); // Log apps before finding 1xbet
-            const xbetAppInfo = apps.find(app =>
-              app.name.toLowerCase() === '1xbet'
-            );
-        console.log("Found 1xbet app info:", xbetAppInfo); // Log result of finding 1xbet
-
-        if (!xbetAppInfo) {
-           setError(t('Application information not available for the default app.'));
-           setLoading(false);
-           return;
-        }
-        appIdToSend = xbetAppInfo.id;
-        userAppIdToSend = formData.id; // Use the manually entered ID
-         // *** IMPORTANT ***
-         // If you want to allow depositing to *any* app by typing the ID,
-         // you MUST add an app selection dropdown here and use its value for appIdToSend.
-         // The current logic only supports saved IDs for other apps, or 1xbet for typed IDs.
-    }
-  }
-
-
-
     try {
-      // // Validate the amount
-      // if (Number(formData.amount) < MINIMUM_DEPOSIT) {
-      //   setError(t(`Minimum deposit amount is ${MINIMUM_DEPOSIT} XOF`));
-      //   setLoading(false);
-      //   return;
-      // }
-
-      // Find the selected network's ID
-      const selectedNetwork = networks.find(net =>
-        net.name.toLowerCase() === formData.network.toLowerCase()
-      ) as { id: string; name: string } | undefined;
-
-      if (!selectedNetwork) {
-        throw new Error(t('Please select a network'));
-      }
-
-      // Find 1xbet app ID
-      // const xbetApp = apps.find(app =>
-      //   app.name.toLowerCase() === '1xbet'
-      // );
-
-      // if (!xbetApp) {
-      //   throw new Error(t('Application information not available'));
-      // }
-
-      // Prepare the payload
-      const payload = {
-        amount: Number(formData.amount),
-        type_trans: "deposit",
+      const token = localStorage.getItem('accessToken');
+      if (!token) throw new Error('Not authenticated');
+      
+      const response = await axios.post('https://api.yapson.net/yapson/transaction', {
+        type_trans: 'deposit',
+        amount: formData.amount,
+        phone_number: formData.phoneNumber,
         network_id: selectedNetwork.id,
-        phone_number: formData.number,
-        // app_id: xbetApp.id,
-        // user_app_id: formData.id
-        app_id: appIdToSend, // Use the determined app ID
-        user_app_id: userAppIdToSend // Use the determined user app ID
-     
-      };
-
-      console.log("Sending deposit payload:", payload); // Log the payload
-
-      // Send the deposit request
-      const response = await axios.post('https://api.yapson.net/yapson/transaction', payload, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
+        app_id: selectedId.app_name?.id,
+        user_app_id: selectedId.link
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
       });
 
-      console.log("Deposit response:", response.data); // Log the response
-
-      setSuccess(t('Deposit successful! Transaction ID:') + ' ' + (response.data.transaction_id || response.data.id || ''));
+      const transaction = response.data;
+      setSelectedTransaction({ transaction });
       
-      // Show transaction details
-      if (response.data) {
-        // If the response contains transaction details directly
-        if (response.data.transaction_id) {
-          // Fetch the full transaction details
-          const transactionResponse = await axios.get(`https://api.yapson.net/yapson/transaction/${response.data.transaction_id}`, {
-            headers: {
-              Authorization: `Bearer ${token}`
-            }
-          });
-          // Add user_app_id to the fetched transaction data
-          const transactionDataWithId = {
-              ...transactionResponse.data,
-              user_app_id: userAppIdToSend // Add the ID from the form/selected saved ID
-          };
-          showTransactionDetails(transactionDataWithId);
-        
-          //showTransactionDetails(transactionResponse.data);
-        } else {
-          // If the response is the transaction itself, add user_app_id to it
-          const transactionDataWithId = {
-              ...response.data,
-              user_app_id: userAppIdToSend // Add the ID from the form/selected saved ID
-          };
-          showTransactionDetails(transactionDataWithId);
-          //showTransactionDetails(response.data);
-        }
-      }
-      
+      setSuccess('Transaction initiated successfully!');
       // Reset form
-      setFormData({
-        id: '',
-        amount: '',
-        number: '',
-        network: ''
-      });
-      setSelectedSavedIdLink(null); // Clear selected saved ID
-
-      
-    } catch (err: unknown) {
-      console.error(t('Error processing deposit:'), err);
-      
-      // Extract the specific error message from the response
-      const axiosError = err as AxiosError<ErrorResponse>;
-      const errorMessage = extractErrorMessage(axiosError);
-      setError(errorMessage);
+      setCurrentStep('selectId');
+      setSelectedId(null);
+      setSelectedNetwork(null);
+      setFormData({ amount: '', phoneNumber: '' });
+    } catch (err) {
+      console.error('Transaction error:', err);
+      setError(err.response?.data?.detail || 'Failed to process transaction');
     } finally {
       setLoading(false);
     }
   };
 
-  // Network images
-  const networkImages = {
-    MTN: 'https://firebasestorage.googleapis.com/v0/b/groupchat-d6de7.appspot.com/o/MTN-Mobile-Money-Senegal-Logo-1-550x298.webp?alt=media&token=6c70d498-35e3-4054-a2fd-e42a3138f3fb', // Update with your actual MTN logo path
-    MOOV: 'https://firebasestorage.googleapis.com/v0/b/groupchat-d6de7.appspot.com/o/Moov_Africa_logo.png?alt=media&token=281df10d-fe29-4eeb-83ef-bcb1f3ee2121' // Update with your actual MOOV logo path
+  const renderStep = () => {
+    switch (currentStep) {
+      case 'selectId':
+        return (
+          <div className="space-y-4">
+            <h2 className="text-xl font-bold">Step 1: Select Your Bet ID</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {savedAppIds.map((idLink) => (
+                <div 
+                  key={idLink.id}
+                  onClick={() => handleIdSelect(idLink)}
+                  className={`p-4 border rounded-lg cursor-pointer ${theme.colors.hover} transition-colors`}
+                >
+                  <div className="font-medium">{idLink.app_name?.public_name || idLink.app_name?.name || 'Unknown App'}</div>
+                  <div className="text-sm text-gray-500 truncate">{idLink.link}</div>
+                </div>
+              ))}
+            </div>
+            {savedAppIds.length === 0 && (
+              <p className="text-gray-500">No saved bet IDs found. Please add one in your profile.</p>
+            )}
+          </div>
+        );
+        
+      case 'selectNetwork':
+        return (
+          <div className="space-y-4">
+            <h2 className="text-xl font-bold">Step 2: Select Network</h2>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {networks.map((network) => (
+                <div
+                  key={network.id}
+                  onClick={() => handleNetworkSelect(network)}
+                  className={`p-4 border rounded-lg cursor-pointer text-center ${
+                    selectedNetwork?.id === network.id ? `border-orange-500 ${theme.colors.background}` : `${theme.colors.hover}`
+                  } transition-colors`}
+                >
+                  {network.image ? (
+                    <img src={network.image} alt={network.name} className="h-12 mx-auto mb-2" />
+                  ) : (
+                    <div className="h-12 flex items-center justify-center mb-2">
+                      {network.name}
+                    </div>
+                  )}
+                  <div className="text-sm font-medium">{network.name}</div>
+                </div>
+              ))}
+            </div>
+            <button
+              onClick={() => setCurrentStep('selectId')}
+              className="mt-4 px-4 py-2 text-sm text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
+            >
+              ← Back to Bet IDs
+            </button>
+          </div>
+        );
+        
+      case 'enterDetails':
+        return (
+          <div className="space-y-6">
+            <h2 className="text-xl font-bold">Step 3: Enter Details</h2>
+            
+            <div className={`${theme.colors.c_background} p-4 rounded-lg`}>
+              <div className="grid grid-cols-2 gap-4 mb-4">
+                <div>
+                  <p className="text-sm text-gray-500">Selected Bet ID</p>
+                  <p className="font-medium">{selectedId?.link}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Network</p>
+                  <p className="font-medium">{selectedNetwork?.name}</p>
+                </div>
+              </div>
+              
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div>
+                  <label htmlFor="amount" className="block text-sm font-medium mb-1">
+                    Amount (FCFA)
+                  </label>
+                  <input
+                    type="number"
+                    id="amount"
+                    name="amount"
+                    value={formData.amount}
+                    onChange={handleInputChange}
+                    className="w-full p-2 border rounded-md dark:bg-gray-700 dark:border-gray-600"
+                    placeholder="Enter amount"
+                    required
+                    min="200"
+                    step="50"
+                  />
+                </div>
+                
+                <div>
+                  <label htmlFor="phoneNumber" className="block text-sm font-medium mb-1">
+                    Phone Number
+                  </label>
+                  <input
+                    type="tel"
+                    id="phoneNumber"
+                    name="phoneNumber"
+                    value={formData.phoneNumber}
+                    onChange={handleInputChange}
+                    className="w-full p-2 border rounded-md dark:bg-gray-700 dark:border-gray-600"
+                    placeholder="e.g., 771234567"
+                    required
+                  />
+                </div>
+                
+                <div className="flex justify-between pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setCurrentStep('selectNetwork')}
+                    className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
+                  >
+                    ← Back
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="px-6 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 disabled:opacity-50"
+                  >
+                    {loading ? 'Processing...' : 'Submit'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        );
+    }
   };
 
   return (
-    <div className={`min-h-screen bg-gradient-to-br ${theme.colors.background} `}>
-      <DashboardHeader/>
-      <Head>
-        <title>{t('Deposits')}</title>
-        <meta name="description" content={t('Make deposits to your account')} />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-      </Head>
-
-      <main className={`container ${theme.colors.background} mx-auto px-4 py-12 max-w-4xl`}>
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-orange-600 to-orange-600 dark:from-orange-400 dark:to-orange-400">
-              {t('Deposits')}
-            </h1>
-            <p className={`${theme.colors.text} mt-2`}>
-              {t('Make your deposits to your account here')}
-            </p>
-          </div>
-          
-          <button
+    <div className="container mx-auto p-4 max-w-4xl">
+      <h1 className="text-2xl font-bold mb-6">Deposi Funds</h1>
+      <button
             onClick={() => window.history.back()}
-            className="flex items-center space-x-2 text-sm font-medium text-gray-600 hover:text-orange-600 dark:text-gray-300 dark:hover:text-orange-400 bg-white dark:bg-gray-800 px-4 py-2 rounded-lg shadow-sm transition-all hover:shadow-md"
+            className="flex items-center text-md font-medium  dark:text-gray-300 dark:hover:text-white  px-4 py-2 rounded-lg shadow-sm transition-all duration-200"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
-            <span>{t('Back')}</span>
+            {t("Back")}
           </button>
-        </div>
-
-        <div className={`bg-gradient-to-br ${theme.colors.a_background} rounded-2xl shadow-xl overflow-hidden`}>
-          {/* Important notice banner */}
-          <div className="bg-amber-50 dark:bg-amber-900/30 border-l-4 border-amber-500 dark:border-amber-400 p-4">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-amber-500" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <div className="ml-3">
-                <p className="text-sm font-medium text-amber-800 dark:text-amber-300">
-                  <span className="font-bold">{t('IMPORTANT')}</span> - {t('Your account currency must be in XOF.')}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Error and success alerts */}
-          {error && (
-            <div className="bg-red-50 dark:bg-red-900/30 border-l-4 border-red-500 p-4 mt-4 mx-6">
-              <div className="flex">
-                <div className="flex-shrink-0">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-red-500" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                  </svg>
-                </div>
-                <div className="ml-3">
-                  <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {success && (
-            <div className="bg-green-50 dark:bg-green-900/30 border-l-4 border-green-500 p-4 mt-4 mx-6">
-              <div className="flex">
-                <div className="flex-shrink-0">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-500" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                  </svg>
-                </div>
-                <div className="ml-3">
-                  <p className="text-sm text-green-700 dark:text-green-300">{success}</p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Form container */}
-          <div className="p-6">
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="space-y-4">
-                {/* ID field */}
-                {/* <div>
-                  <label htmlFor="id" className="block text-sm font-medium mb-1">
-                    {t('ID')}
-                  </label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2" />
-                      </svg>
-                    </div>
-                    <input
-                      type="text"
-                      id="id"
-                      name="id"
-                      placeholder={t('Enter your ID')}
-                      value={formData.id}
-                      onChange={handleChange}
-                      className="block w-full pl-10 pr-3 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
-                      required
-                    />
-                  </div>
-                  <p className="mt-1 text-sm ">{t('This is your 1xbet user ID')}</p>
-                </div> */}
-                {/* ID field with suggestions */}
-                <div>
-                  <label htmlFor="id" className="block text-sm font-medium mb-1">
-                    {t('Betting App ID')}
-                  </label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2" />
-                      </svg>
-                    </div>
-                    <input
-                      type="text"
-                      id="id"
-                      name="id"
-                      placeholder={t('Enter or select your betting app ID')}
-                      value={formData.id}
-                      onChange={handleChange}
-                      onFocus={() => setShowSuggestions(true)}
-                      // Add onBlur to hide suggestions after a short delay to allow click
-                      onBlur={() => setTimeout(() => setShowSuggestions(false), 100)}
-                      className="block w-full pl-10 pr-3 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
-                      required
-                    />
-
-                    {/* Suggestions dropdown */}
-                    {showSuggestions && filteredSuggestions.length > 0 && (
-                      <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-48 overflow-y-auto">
-                        <div className="p-2 border-b border-gray-200 dark:border-gray-700">
-                          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('Saved IDs')}</span>
-                        </div>
-                        {filteredSuggestions.map((item) => (
-                          <div
-                            key={item.id}
-                            onClick={() => handleSelectSuggestion(item)} // Use the new handler
-                            className="px-3 py-2 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer flex justify-between items-center"
-                          >
-                            <span className="font-medium text-gray-800 dark:text-white">
-                            {item.app_name?.public_name || item.app_name?.name || t('Unknown App')}
-                            <span className="ml-2 text-gray-600 dark:text-gray-400 font-normal">
-                              - {item.link}
-                            </span>
-                          </span>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                   {/* Display selected app name if a saved ID is chosen */}
-                  {selectedSavedIdLink && (
-                      <p className="mt-1 text-sm text-green-600 dark:text-green-400">
-                         {t('Selected App')}: {selectedSavedIdLink.app_name?.public_name || selectedSavedIdLink.app_name?.name || 'Unknown App'}
-                      </p>
-                  )}
-                   {!selectedSavedIdLink && formData.id && (
-                       <p className="mt-1 text-sm text-amber-600 dark:text-amber-400">
-                          {t('You are entering a new ID. Defaulting to 1xbet app.')} {/* Inform user about default */}
-                       </p>
-                   )}
-                   {!selectedSavedIdLink && !formData.id && (
-                       <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                          {t('Enter your betting app ID or select from saved IDs.')}
-                       </p>
-                   )}
-                </div>
-
-                {/* Amount field */}
-                <div>
-                  <label htmlFor="amount" className="block text-sm font-medium  mb-1">
-                    {t('Amount')}
-                  </label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <span className="text-gray-500">XOF</span>
-                    </div>
-                    <input
-                      type="number"
-                      id="amount"
-                      name="amount"
-                      placeholder={t('Enter deposit amount')}
-                      value={formData.amount}
-                      onChange={handleChange}
-                      className="block w-full pl-12 pr-3 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
-                      required
-                    />
-                  </div>
-                </div>
-
-                {/* Number field */}
-                <div>
-                  <label htmlFor="number" className="block text-sm font-medium  mb-1">
-                    {t('Number')}
-                  </label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                      </svg>
-                    </div>
-                    <input
-                      type="text"
-                      id="number"
-                      name="number"
-                      placeholder={t('Enter your mobile money number')}
-                      pattern="^\+?\d{10,15}$"
-                      value={formData.number}
-                      onChange={handleChange}
-                      className="block w-full pl-10 pr-3 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
-                      required
-                    />
-                  </div>
-                  <p className="mt-1 text-sm ">{t('Your mobile money number')}</p>
-                </div>
-
-                {/* Network selection */}
-                <div>
-                  <label className="block text-sm font-medium mb-3">
-                    {t('Network')}
-                  </label>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div
-                      className={`flex items-center border ${
-                        formData.network === 'MTN'
-                          ? 'bg-amber-50 border-amber-500 dark:bg-amber-900/30 dark:border-amber-500'
-                          : 'border-gray-300 dark:border-gray-600'
-                      } rounded-lg p-4 cursor-pointer transition-all hover:shadow-md`}
-                      onClick={() => handleNetworkSelect('MTN')}
-                    >
-                      <div className="w-10 h-10 flex-shrink-0 mr-4 bg-white rounded-full flex items-center justify-center p-1 shadow-sm">
-                        <img 
-                          src={networkImages.MTN}
-                          alt="MTN Logo"
-                          className="w-full h-full object-contain"
-                        />
-                      </div>
-                      <div>
-                        <span className="font-medium">MTN</span>
-                        <span className="block text-xs text-gray-500 dark:text-gray-400">Mobile Money</span>
-                      </div>
-                      {formData.network === 'MTN' && (
-                        <div className="ml-auto">
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-amber-500" viewBox="0 0 20 20" fill="currentColor">
-                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                          </svg>
-                        </div>
-                      )}
-                    </div>
-
-                    <div
-                      className={`flex items-center border ${
-                        formData.network === 'MOOV'
-                          ? 'bg-orange-50 border-blue-500 dark:bg-blue-900/30 dark:border-blue-500'
-                          : 'border-gray-300 dark:border-gray-600'
-                      } rounded-lg p-4 cursor-pointer transition-all hover:shadow-md`}
-                      onClick={() => handleNetworkSelect('MOOV')}
-                    >
-                      <div className="w-10 h-10 flex-shrink-0 mr-4 bg-white rounded-full flex items-center justify-center p-1 shadow-sm">
-                        <img 
-                          src={networkImages.MOOV}
-                          alt="MOOV Logo"
-                          className="w-full h-full object-contain"
-                        />
-                      </div>
-                      <div>
-                        <span className="font-medium">MOOV</span>
-                        <span className="block text-xs text-gray-500 dark:text-gray-400">Mobile Money</span>
-                      </div>
-                      {formData.network === 'MOOV' && (
-                        <div className="ml-auto">
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-500" viewBox="0 0 20 20" fill="currentColor">
-                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                          </svg>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  {!formData.network && (
-                    <p className="mt-2 text-sm text-red-600 dark:text-red-400">{t('Please select a network')}</p>
-                  )}
-                </div>
-              </div>
-
-              <div className="pt-4">
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className={`w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-base font-medium text-white bg-gradient-to-r from-orange-600 to-orange-600 hover:from-orange-700 hover:to-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transition-all ${
-                    loading ? 'opacity-70 cursor-not-allowed' : ''
-                  }`}
-                >
-                  {loading && (
-                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                  )}
-                  {loading ? t('Processing...') : t('Proceed')}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      </main>
-
-      {/* Transaction Details Modal - Modern redesign */}
-      {isModalOpen && selectedTransaction && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          {/* Backdrop with blur effect */}
-          <div
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-            onClick={closeTransactionDetails}
-          ></div>
-
-          {/* Modal content */}
-          <div className="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-md z-10 overflow-hidden shadow-2xl transform transition-all">
-            {/* Header */}
-            <div className="relative bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-800 p-6">
-              <button
-                onClick={closeTransactionDetails}
-                className="absolute top-4 right-4 p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 transition"
+      {/* Progress Steps */}
+      <div className="flex justify-between mb-8 relative">
+        {['selectId', 'selectNetwork', 'enterDetails'].map((step, index) => {
+          const stepNum = index + 1;
+          let stepName = '';
+          let currentStepIndex = ['selectId', 'selectNetwork', 'enterDetails'].indexOf(currentStep);
+          
+          switch (step) {
+            case 'selectId': stepName = 'Select Bet ID'; break;
+            case 'selectNetwork': stepName = 'Select Network'; break;
+            case 'enterDetails': stepName = 'Enter Details'; break;
+          }
+          
+          const isCompleted = index < currentStepIndex;
+          const isActive = index === currentStepIndex;
+          
+          return (
+            <div key={step} className="flex flex-col items-center flex-1 relative">
+              <div 
+                className={`w-10 h-10 rounded-full flex items-center justify-center mb-2 ${
+                  isActive 
+                    ? 'bg-orange-600 text-white' 
+                    : isCompleted 
+                      ? 'bg-green-500 text-white' 
+                      : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300'
+                }`}
               >
-                {/* <XMarkIcon className="w-5 h-5" /> */}
-              </button>
-
-              <div className="flex flex-col items-center">
-                {selectedTransaction.transaction.app && (
-                  <div className="w-16 h-16 mb-4 rounded-full overflow-hidden bg-white shadow-md flex items-center justify-center p-2">
-                    <img
-                      src={selectedTransaction.transaction.app.image}
-                      alt={selectedTransaction.transaction.app.name}
-                      className="max-w-full max-h-full object-contain"
-                    />
-                  </div>
-                )}
-
-                <div
-                  className={`rounded-full p-3 mb-3 ${
-                    selectedTransaction.transaction.type_trans === "deposit"
-                      ? "bg-orange-100 text-orange-700 dark:bg-orange-900/50 dark:text-orange-300"
-                      : "bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300"
-                  }`}
-                >
-                  {getTransactionTypeIcon(
-                    selectedTransaction.transaction.type_trans
+                {isCompleted ? '✓' : stepNum}
+              </div>
+              <span className={`text-sm text-center ${isActive ? 'font-medium text-orange-600 dark:text-orange-400' : 'text-gray-500'}`}>
+                {stepName}
+              </span>
+              
+              {index < 2 && (
+                <div className="absolute top-5 left-1/2 w-full h-1 bg-gray-200 dark:bg-gray-700 -z-10">
+                  {isCompleted && (
+                    <div className="h-full bg-green-500" style={{ width: '100%' }}></div>
                   )}
                 </div>
-
-                <h3 className="text-2xl font-bold text-gray-800 dark:text-white">
-                  XOF {selectedTransaction.transaction.amount.toLocaleString()}
-                </h3>
-
-                <div
-                  className={`mt-2 px-3 py-1 rounded-full text-sm font-medium ${
-                    selectedTransaction.transaction.status === "failed" ||
-                    selectedTransaction.transaction.status === "error"
-                      ? "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300"
-                      : selectedTransaction.transaction.status === "pending"
-                      ? "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300"
-                      : "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300"
-                  }`}
-                >
-                  {formatStatus(selectedTransaction.transaction.status)}
-                </div>
-
-                <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
-                  {selectedTransaction.transaction.type_trans === "deposit"
-                    ? t("Deposit")
-                    : t("Withdrawal")}
-                  {selectedTransaction.transaction.app &&
-                    ` - ${selectedTransaction.transaction.app.public_name || selectedTransaction.transaction.app.name}`}
-                </p>
-
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  {formatDate(selectedTransaction.transaction.created_at)}
-                </p>
-              </div>
-            </div>
-
-            {/* Transaction details */}
-            <div className="p-6 text-gray-800 dark:text-gray-200">
-              <h4 className="text-lg font-bold mb-4 border-b border-gray-200 dark:border-gray-700 pb-2">
-                {t("Transaction details")}
-              </h4>
-
-              <div className="space-y-4">
-                {selectedTransaction.transaction.network && (
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-500 dark:text-gray-400">{t("Payment Method")}</span>
-                    <div className="flex items-center bg-gray-50 dark:bg-gray-700 px-3 py-1 rounded-lg">
-                      <img
-                        src={selectedTransaction.transaction.network.image}
-                        alt={selectedTransaction.transaction.network.name}
-                        className="w-6 h-6 mr-2 object-contain"
-                      />
-                      <span className="font-medium">
-                        {selectedTransaction.transaction.network.public_name || selectedTransaction.transaction.network.name}
-                      </span>
-                    </div>
-                  </div>
-                )}
-
-                <div className="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-700">
-                  <span className="text-gray-500 dark:text-gray-400">{t("Status")}</span>
-                  <span
-                    className={`font-medium px-3 py-1 rounded-lg ${
-                      selectedTransaction.transaction.status === "failed" ||
-                      selectedTransaction.transaction.status === "error"
-                        ? "bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-300"
-                        : selectedTransaction.transaction.status === "pending"
-                        ? "bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-300"
-                        : "bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-300"
-                    }`}
-                  >
-                    {formatStatus(selectedTransaction.transaction.status)}
-                  </span>
-                </div>
-
-                <div className="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-700">
-                  <span className="text-gray-500 dark:text-gray-400">{t("Reference")}</span>
-                  <div className="flex items-center bg-gray-50 dark:bg-gray-700 px-3 py-1 rounded-lg">
-                    <span className="font-medium mr-2">
-                      {selectedTransaction.transaction.reference}
-                    </span>
-                    <button
-                      onClick={() =>
-                        navigator.clipboard.writeText(
-                          selectedTransaction.transaction.reference
-                        )
-                      }
-                      className="p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition"
-                      title={t("Copy")}
-                    >
-                      <ClipboardIcon className="w-4 h-4 text-gray-500 dark:text-gray-400" />
-                    </button>
-                  </div>
-                </div>
-
-                {selectedTransaction.transaction.phone_number && (
-                  <div className="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-700">
-                    <span className="text-gray-500 dark:text-gray-400">{t("Phone Number")}</span>
-                    <span className="font-medium bg-gray-50 dark:bg-gray-700 px-3 py-1 rounded-lg">
-                      {selectedTransaction.transaction.phone_number}
-                    </span>
-                  </div>
-                )}
-
-                {selectedTransaction.transaction.user_app_id && (
-                  <div className="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-700">
-                    <span className="text-gray-500 dark:text-gray-400">{t("User App ID")}</span>
-                    <span className="font-medium bg-gray-50 dark:bg-gray-700 px-3 py-1 rounded-lg">
-                      {selectedTransaction.transaction.user_app_id}
-                    </span>
-                  </div>
-                )}
-
-                <div className="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-700">
-                  <span className="text-gray-500 dark:text-gray-400">{t("Transaction Date")}</span>
-                  <span className="font-medium bg-gray-50 dark:bg-gray-700 px-3 py-1 rounded-lg">
-                    {formatDate(selectedTransaction.transaction.created_at)}
-                  </span>
-                </div>
-
-                {selectedTransaction.transaction.error_message && (
-                  <div className="flex flex-col space-y-2 mt-2 p-3 bg-red-50 dark:bg-red-900/20 rounded-lg">
-                    <span className="text-gray-700 dark:text-gray-300 font-medium">{t("Error Message")}</span>
-                    <span className="text-red-600 dark:text-red-300 text-sm">
-                      {selectedTransaction.transaction.error_message}
-                    </span>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Footer with action buttons */}
-            <div className="p-4 border-t border-gray-200 dark:border-gray-700 flex justify-end space-x-3 bg-gray-50 dark:bg-gray-800">
-              <button
-                onClick={closeTransactionDetails}
-                className="px-4 py-2 bg-white hover:bg-gray-100 dark:bg-gray-700 dark:hover:bg-gray-600 text-black border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm transition-all"
-              >
-                {t("Close")}
-              </button>
-              {selectedTransaction.transaction.status === "pending" && (
-                <button
-                  className="px-4 py-2 bg-gradient-to-r from-orange-600 to-orange-600 hover:from-orange-700 hover:to-orange-700 text-white rounded-lg shadow-sm transition-all"
-                >
-                  {t("Check Status")}
-                </button>
               )}
+            </div>
+          );
+        })}
+      </div>
+      
+      {/* Main Content */}
+      <div className={`bg-gradient-to-br ${theme.colors.a_background} rounded-lg shadow-md p-6`}>
+        {error && (
+          <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+            {error}
+          </div>
+        )}
+        
+        {success && (
+          <div className="mb-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded">
+            {success}
+          </div>
+        )}
+        
+        {loading && !success && !error ? (
+          <div className="flex justify-center items-center p-8">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-orange-500"></div>
+          </div>
+        ) : (
+          renderStep()
+        )}
+      </div>
+      
+      {/* Transaction Details Modal */}
+      {isModalOpen && selectedTransaction && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md">
+            <div className="p-6">
+              <h3 className="text-lg font-semibold mb-4">Transaction Details</h3>
+              {/* Transaction details content */}
+              <div className="space-y-2">
+                <p><span className="font-medium">Amount:</span> {selectedTransaction.transaction.amount} FCFA</p>
+                <p><span className="font-medium">Status:</span> {selectedTransaction.transaction.status}</p>
+                <p><span className="font-medium">Reference:</span> {selectedTransaction.transaction.reference}</p>
+                <p><span className="font-medium">Date:</span> {new Date(selectedTransaction.transaction.created_at).toLocaleString()}</p>
+              </div>
+              <div className="mt-6 flex justify-end">
+                <button
+                  onClick={closeTransactionDetails}
+                  className="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700"
+                >
+                  Close
+                </button>
+              </div>
             </div>
           </div>
         </div>
       )}
+    </div>
+  );
+}
 
       {/* Recent transactions section - This could be added if needed */}
       {/* <div className="mt-8 bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden">
@@ -1383,6 +868,6 @@ export default function Deposits() {
           </div>
         </div>
       </div> */}
-    </div>
-  );
-}
+//     </div>
+//   );
+// }

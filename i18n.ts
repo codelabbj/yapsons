@@ -111,6 +111,9 @@ const resources = {
       "All account data will be immediately erased from our systems." : "All account data will be immediately erased from our systems.",
       "Use strong, unique passwords": "Use strong, unique passwords",
       "Update your password regularly" : "Update your password regularly",
+      "History" : "History",
+      "View All" : "View All",
+      "MY ID": "MY ID",
 
       // Transaction History translations
       "No transactions found": "No transactions found",
@@ -232,6 +235,10 @@ const resources = {
       "Transaction History": "Historique des transactions",
       "Logout": "Déconnexion",
       "Hello": "Bonjour",
+
+      "History": "Historique",
+      "View All": "Voir tout",
+      "MY ID": "MON ID",
 
       //Hero
       "Welcome to our amazing platform" : "Bienvenue sur notre incroyable plateforme",
