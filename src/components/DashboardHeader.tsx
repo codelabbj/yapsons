@@ -456,7 +456,7 @@ const DashboardHeader = () => {
                   <p className="text-sm font-medium text-white">
                     {t("Hello")}, {userName || 'User'}!
                   </p>
-                  <p className="text-xs text-gray-400">Welcome back</p>
+                  <p className="text-xs text-gray-400">Content de te revoir</p>
                 </div>
               </div>
             </div>

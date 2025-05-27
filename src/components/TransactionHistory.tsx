@@ -1875,7 +1875,7 @@ const StatusBadge = ({ status }: { status: string }) => {
                   <div className="bg-gray-800/50 rounded-full p-4 mb-4">
                     <Activity className="w-8 h-8 text-gray-400" />
                   </div>
-                  <h3 className="text-lg font-medium text-gray-400 mb-2">No transactions found</h3>
+                  <h3 className="text-lg font-medium text-gray-400 mb-2">{t("No transactions found")}</h3>
                   <p className="text-sm text-gray-500 text-center">
                     {activeTab === 'all'
                       ? t("You haven't made any transactions yet.")

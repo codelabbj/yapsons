@@ -430,7 +430,7 @@ const lastNotificationElement = (node: HTMLDivElement | null) => {
                   onClick={toggleSelectionMode}
                   className="text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
                 >
-                  {isSelectionMode ? 'Cancel' : 'Select'}
+                  {isSelectionMode ? 'Annuler' : 'Sélectionner'}
                 </button>
 
                 {isSelectionMode && (
@@ -439,13 +439,13 @@ const lastNotificationElement = (node: HTMLDivElement | null) => {
                       onClick={selectAllNotifications}
                       className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
                     >
-                      Select All
+                      Sélectionner tout
                     </button>
                     <button
                       onClick={clearAllSelections}
                       className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
                     >
-                      Clear
+                      Clair
                     </button>
                   </>
                 )}
@@ -458,7 +458,7 @@ const lastNotificationElement = (node: HTMLDivElement | null) => {
                     className="flex items-center space-x-1 px-3 py-1 bg-blue-600 text-white rounded-full text-sm hover:bg-blue-700"
                   >
                     <Check className="h-3 w-3" />
-                    <span>Mark Read ({selectedNotifications.size})</span>
+                    <span>Marquer comme lu ({selectedNotifications.size})</span>
                   </button>
                 )}
 

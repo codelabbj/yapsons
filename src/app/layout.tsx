@@ -37,9 +37,12 @@
 
 'use client';
 
-import React from 'react';
+import React ,{useEffect} from 'react';
 import { ThemeProvider } from '../components/ThemeProvider';
 import { WebSocketProvider } from '../context/WebSocketContext';
+import { usePathname, useSearchParams } from 'next/navigation';
+import i18n from '../../i18n';
+
 
 //import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
@@ -59,6 +62,19 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    // Set language from localStorage or default to 'fr'
+    const lang = localStorage.getItem('i18nextLng') || 'fr';
+    i18n.changeLanguage(lang);
+    
+    // Update HTML lang attribute
+    document.documentElement.lang = lang;
+  }, [pathname, searchParams]); // Re-run when route changes
+
+
   return (
     <WebSocketProvider>
     <html lang="fr">

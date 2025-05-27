@@ -21,7 +21,7 @@ const resources = {
       "Your trusted partner for secure transactions": "Your trusted partner for secure transactions",
       "Available": "Available",
       "Transaction Smoothness": "Transaction Smoothness",
-      "© 2025 Yapson. All rights reserved.": "© 2025 Yapson. All rights reserved.",
+      "© 2025 Yapson. All rights reserved .": "© 2025 Yapson. All rights reserved .",
 
 
       
@@ -32,6 +32,8 @@ const resources = {
       "WITHDRAW": "WITHDRAW",
       "Transaction History": "Transaction History",
       "Hello": "Hello",
+
+      "theme":"theme",
 
       // AuthForm translations
       "Welcome to Yapson": "Welcome to Yapson",
@@ -117,6 +119,7 @@ const resources = {
 
       // Transaction History translations
       "No transactions found": "No transactions found",
+      "You haven't made any transactions yet.":"You haven't made any transactions yet.",
       "Loading transactions...": "Loading transactions...", 
       "Failed to fetch transactions": "Failed to fetch transactions",
       "You must be logged in to view transactions.": "You must be logged in to view transactions.",
@@ -225,7 +228,8 @@ const resources = {
       "Available": "Disponible",
       "Transaction Smoothness": "Fluidité de la transaction",
       "Processing Time": "Temps de traitement",
-      "© 2025 Yapson. All rights reserved.": "© 2025 Yapson. Tous droits réservés.",
+      "© 2025 Yapson. All rights reserved .": "© 2025 Yapson. Tous droits réservés.",
+      "theme": "thème",
 
 
       // Dashboard Header translations
@@ -330,6 +334,7 @@ const resources = {
 
       // Transaction History translations
       "No transactions found": "Aucune transaction trouvée",
+      "You haven't made any transactions yet." : "Vous n'avez pas encore fait de transactions.",
       "Loading transactions...": "Chargement des transactions...",
       "Failed to fetch transactions": "Échec de la récupération des transactions",
       "You must be logged in to view transactions.": "Vous devez être connecté pour voir les transactions.",
@@ -422,30 +427,43 @@ const resources = {
 };
 
 // Skip detection during SSR
-const languageDetector = new LanguageDetector();
-languageDetector.addDetector({
-  name: 'customDetector',
-  lookup: () => {
-    if (typeof window === 'undefined') {
-      return 'fr'; // Default language for SSR
-    }
-    // Your client-side detection logic here
-    return undefined;
-  }
+const languageDetector = new LanguageDetector(null, {
+  order: ['localStorage', 'navigator'], // Try localStorage first, then browser language
+  lookupLocalStorage: 'i18nextLng', // Key to store language in localStorage
+  caches: ['localStorage'], // Only use localStorage for persistence
+ 
+  //fallbackLng: 'fr', // Default to French if no language is detected
+  
 });
 i18n
 .use(languageDetector)
-.use(initReactI18next).init({
-  resources,
-  lng: 'fr', // Default language
+.use(initReactI18next)
+.init({
+  resources,  // This is correct
   fallbackLng: 'fr',
+  supportedLngs: ['en', 'fr'],
+  //whitelist: ['en', 'fr'], // Moved whitelist here
+
+  // debug: process.env.NODE_ENV === 'development',
+  // interpolation: {
+  //   escapeValue: false,
+  // },
   detection: {
-    order: ['localStorage', 'cookie', 'navigator', 'htmlTag', 'path', 'subdomain'],
-    caches: ['localStorage', 'cookie'],
+    order: ['localStorage', 'navigator'],
+    lookupLocalStorage: 'i18nextLng',
+    caches: ['localStorage'],
+    // checkWhitelist: true,
+    // checkForSimilarInWhitelist: true,
   },
   interpolation: {
-    escapeValue: false, // React already escapes values
-  },
+    escapeValue: false, // React already escapes values by default
+  }
 });
+
+// Set French as default language if none is set
+if (typeof window !== 'undefined' && !localStorage.getItem('i18nextLng')) {
+  i18n.changeLanguage('fr');
+  localStorage.setItem('i18nextLng', 'fr');
+}
 
 export default i18n;
