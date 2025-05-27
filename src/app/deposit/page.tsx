@@ -499,6 +499,7 @@ export default function Deposits() {
 
       const transaction = response.data;
       setSelectedTransaction({ transaction });
+      setIsModalOpen(true);
       
       setSuccess('Transaction initiated successfully!');
       // Reset form
@@ -508,11 +509,26 @@ export default function Deposits() {
       setFormData({ amount: '', phoneNumber: '' });
     } catch (err) {
       console.error('Transaction error:', err);
-      setError(err.response?.data?.detail || 'Failed to process transaction');
+      if (
+        typeof err === 'object' &&
+        err !== null &&
+        'response' in err &&
+        typeof (err as { response?: unknown }).response === 'object'
+      ) {
+        const response = (err as { response?: { data?: { detail?: string } } }).response;
+        setError(response?.data?.detail || 'Failed to process transaction');
+      } else {
+        setError('Failed to process transaction');
+      }
     } finally {
       setLoading(false);
     }
   };
+
+  const closeTransactionDetails = () => {
+  setIsModalOpen(false);
+  setSelectedTransaction(null);
+};
 
   const renderStep = () => {
     switch (currentStep) {
@@ -663,7 +679,7 @@ export default function Deposits() {
         {['selectId', 'selectNetwork', 'enterDetails'].map((step, index) => {
           const stepNum = index + 1;
           let stepName = '';
-          let currentStepIndex = ['selectId', 'selectNetwork', 'enterDetails'].indexOf(currentStep);
+          const currentStepIndex = ['selectId', 'selectNetwork', 'enterDetails'].indexOf(currentStep);
           
           switch (step) {
             case 'selectId': stepName = 'Select Bet ID'; break;
@@ -725,32 +741,75 @@ export default function Deposits() {
           renderStep()
         )}
       </div>
-      
       {/* Transaction Details Modal */}
-      {isModalOpen && selectedTransaction && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md">
-            <div className="p-6">
-              <h3 className="text-lg font-semibold mb-4">Transaction Details</h3>
-              {/* Transaction details content */}
-              <div className="space-y-2">
-                <p><span className="font-medium">Amount:</span> {selectedTransaction.transaction.amount} FCFA</p>
-                <p><span className="font-medium">Status:</span> {selectedTransaction.transaction.status}</p>
-                <p><span className="font-medium">Reference:</span> {selectedTransaction.transaction.reference}</p>
-                <p><span className="font-medium">Date:</span> {new Date(selectedTransaction.transaction.created_at).toLocaleString()}</p>
-              </div>
-              <div className="mt-6 flex justify-end">
-                <button
-                  onClick={closeTransactionDetails}
-                  className="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700"
-                >
-                  Close
-                </button>
+        {isModalOpen && selectedTransaction && (
+          <div className={`fixed inset-0 bg-white bg-opacity-50 flex items-center justify-center p-4 z-50`}>
+            <div className={`${theme.colors.background} rounded-lg shadow-xl w-full max-w-md`}>
+              <div className="p-6">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-lg font-semibold">Transaction Details</h3>
+                  <button 
+                    onClick={closeTransactionDetails}
+                    className=""
+                  >
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+                
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center py-2 border-b dark:border-gray-700">
+                    <span className="text-gray-600 dark:text-gray-400">Amount</span>
+                    <span className="font-medium">{selectedTransaction.transaction.amount} FCFA</span>
+                  </div>
+                  
+                  <div className="flex justify-between items-center py-2 border-b dark:border-gray-700">
+                    <span className="text-gray-600 dark:text-gray-400">Status</span>
+                    <span className={`font-medium ${
+                      selectedTransaction.transaction.status === 'completed' 
+                        ? 'text-green-600 dark:text-green-400'
+                        : selectedTransaction.transaction.status === 'pending'
+                        ? 'text-yellow-600 dark:text-yellow-400'
+                        : 'text-red-600 dark:text-red-400'
+                    }`}>
+                      {selectedTransaction.transaction.status.charAt(0).toUpperCase() + 
+                      selectedTransaction.transaction.status.slice(1)}
+                    </span>
+                  </div>
+                  
+                  <div className="flex justify-between items-center py-2 border-b dark:border-gray-700">
+                    <span className="">Reference</span>
+                    <span className="font-medium">{selectedTransaction.transaction.reference}</span>
+                  </div>
+                  
+                  <div className="flex justify-between items-center py-2 border-b dark:border-gray-700">
+                    <span className="">Date</span>
+                    <span className="font-medium">
+                      {new Date(selectedTransaction.transaction.created_at).toLocaleString('fr-FR')}
+                    </span>
+                  </div>
+
+                  {selectedTransaction.transaction.phone_number && (
+                    <div className="flex justify-between items-center py-2 border-b dark:border-gray-700">
+                      <span className="">Phone Number</span>
+                      <span className="font-medium">{selectedTransaction.transaction.phone_number}</span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="mt-6 flex justify-end">
+                  <button
+                    onClick={closeTransactionDetails}
+                    className="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 transition-colors"
+                  >
+                    Close
+                  </button>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
     </div>
   );
 }

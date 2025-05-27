@@ -175,6 +175,7 @@ export default function Withdraw() {
        
       const transaction = response.data;
       setSelectedTransaction({ transaction });
+      setIsModalOpen(true);
       
       setSuccess('Withdrawal initiated successfully!');
       // Reset form
@@ -184,7 +185,13 @@ export default function Withdraw() {
       setFormData({ withdrawalCode: '', phoneNumber: '' });
     } catch (err) {
       console.error('Withdrawal error:', err);
-      setError(err.response?.data?.detail || 'Failed to process withdrawal');
+      if (axios.isAxiosError(err)) {
+        setError(err.response?.data?.detail || 'Failed to process withdrawal');
+      } else if (err instanceof Error) {
+        setError(err.message || 'Failed to process withdrawal');
+      } else {
+        setError('Failed to process withdrawal');
+      }
     } finally {
       setLoading(false);
     }
@@ -339,7 +346,7 @@ export default function Withdraw() {
         {['selectId', 'selectNetwork', 'enterDetails'].map((step, index) => {
           const stepNum = index + 1;
           let stepName = '';
-          let currentStepIndex = ['selectId', 'selectNetwork', 'enterDetails'].indexOf(currentStep);
+          const currentStepIndex = ['selectId', 'selectNetwork', 'enterDetails'].indexOf(currentStep);
           
           switch (step) {
             case 'selectId': stepName = 'Select Bet ID'; break;
