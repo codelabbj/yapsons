@@ -72,7 +72,8 @@ const resources = {
       "Enter Verification Code":"Enter Verification Code",
       "We sent a code to your email. Please enter it below.":"We sent a code to your email. Please enter it below.",
       "Enter your email to receive a verification code":"Enter your email to receive a verification code",
-      
+      "Send Verification Code" : "Send Verification Code",
+      "Back To Login": "Back To Login",
       
 
 
@@ -316,7 +317,8 @@ const resources = {
       "Enter Verification Code":"Entrez le code de vérification",
       "We sent a code to your email. Please enter it below.":"Nous avons envoyé un code à votre email. Veuillez l'entrer ci-dessous.",
       "Enter your email to receive a verification code":"Entrez votre email pour recevoir un code de vérification",
-      
+      "Send Verification Code":"Envoyer le code de vérification",
+      "Back To Login":"Retour à la connexion",
 
       // Profile Page translations
       "Profile": "Profil",
