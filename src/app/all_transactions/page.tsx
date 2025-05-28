@@ -714,6 +714,7 @@ useEffect(() => {
   const StatusBadge = ({ status }: { status: string }) => {
     const statusMap: Record<string, { text: string; className: string }> = {
       completed: { text: 'Terminé', className: 'bg-green-100 text-green-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-green-900 dark:text-green-300' },
+      payment_init_success: { text: 'Traitement', className: 'bg-green-500/10 text-green-500' },
       accept: { text: 'accepter', className: 'bg-green-100 text-yellow-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-yellow-900 dark:text-yellow-300' },
       pending: { text: 'En cours', className: 'bg-yellow-100 text-yellow-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-yellow-900 dark:text-yellow-300' },
       failed: { text: 'Échoué', className: 'bg-red-100 text-red-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-red-900 dark:text-red-300' },

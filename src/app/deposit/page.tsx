@@ -558,7 +558,7 @@ export default function Deposits() {
       case 'selectId':
         return (
           <div className="space-y-4">
-            <h2 className="text-xl font-bold">Step 1: Select Your Bet ID</h2>
+            <h2 className="text-xl font-bold">{t("Step 1: Select Your Bet ID")}</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {savedAppIds.map((idLink) => (
                 <div 
@@ -580,7 +580,7 @@ export default function Deposits() {
       case 'selectNetwork':
         return (
           <div className="space-y-4">
-            <h2 className="text-xl font-bold">Step 2: Select Network</h2>
+            <h2 className="text-xl font-bold">{t("Step 2: Select Network")}</h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {networks.map((network) => (
                 <div
@@ -605,7 +605,7 @@ export default function Deposits() {
               onClick={() => setCurrentStep('selectId')}
               className="mt-4 px-4 py-2 text-sm text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
             >
-              ← Back to Bet IDs
+              ← {t("Back to Bet IDs")}
             </button>
           </div>
         );
@@ -613,16 +613,16 @@ export default function Deposits() {
       case 'enterDetails':
         return (
           <div className="space-y-6">
-            <h2 className="text-xl font-bold">Step 3: Enter Details</h2>
+            <h2 className="text-xl font-bold">{t("Step 3: Enter Details")}</h2>
             
             <div className={`${theme.colors.c_background} p-4 rounded-lg`}>
               <div className="grid grid-cols-2 gap-4 mb-4">
                 <div>
-                  <p className="text-sm text-gray-500">Selected Bet ID</p>
+                  <p className="text-sm text-gray-500">{t("Selected Bet ID")}</p>
                   <p className="font-medium">{selectedId?.link}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Network</p>
+                  <p className="text-sm text-gray-500">{t("Network")}</p>
                   <p className="font-medium">{selectedNetwork?.name}</p>
                 </div>
               </div>
@@ -630,7 +630,7 @@ export default function Deposits() {
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                   <label htmlFor="amount" className="block text-sm font-medium mb-1">
-                    Amount (FCFA)
+                    {t("Amount")} (FCFA)
                   </label>
                   <input
                     type="number"
@@ -648,7 +648,7 @@ export default function Deposits() {
                 
                 <div>
                   <label htmlFor="phoneNumber" className="block text-sm font-medium mb-1">
-                    Phone Number
+                    {t("Phone Number")}
                   </label>
                   <input
                     type="tel"
@@ -668,14 +668,14 @@ export default function Deposits() {
                     onClick={() => setCurrentStep('selectNetwork')}
                     className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
                   >
-                    ← Back
+                    ← {t("Back")}
                   </button>
                   <button
                     type="submit"
                     disabled={loading}
                     className="px-6 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 disabled:opacity-50"
                   >
-                    {loading ? 'Processing...' : 'Submit'}
+                    {loading ? t('Processing...') : t('Submit')}
                   </button>
                 </div>
               </form>
@@ -687,7 +687,7 @@ export default function Deposits() {
 
   return (
     <div className="container mx-auto p-4 max-w-4xl">
-      <h1 className="text-2xl font-bold mb-6">Deposi Funds</h1>
+      <h1 className="text-2xl font-bold mb-6">{t("Deposit Funds")}</h1>
       <button
             onClick={() => window.history.back()}
             className="flex items-center text-md font-medium  dark:text-gray-300 dark:hover:text-white  px-4 py-2 rounded-lg shadow-sm transition-all duration-200"
@@ -705,9 +705,9 @@ export default function Deposits() {
           const currentStepIndex = ['selectId', 'selectNetwork', 'enterDetails'].indexOf(currentStep);
           
           switch (step) {
-            case 'selectId': stepName = 'Select Bet ID'; break;
-            case 'selectNetwork': stepName = 'Select Network'; break;
-            case 'enterDetails': stepName = 'Enter Details'; break;
+            case 'selectId': stepName = t('Select Bet ID'); break;
+            case 'selectNetwork': stepName = t('Select Network'); break;
+            case 'enterDetails': stepName = t('Enter Details'); break;
           }
           
           const isCompleted = index < currentStepIndex;
@@ -770,7 +770,7 @@ export default function Deposits() {
             <div className={`${theme.colors.background} rounded-lg shadow-xl w-full max-w-md`}>
               <div className="p-6">
                 <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-lg font-semibold">Transaction Details</h3>
+                  <h3 className="text-lg font-semibold">{t("Transaction Details")}</h3>
                   <button 
                     onClick={closeTransactionDetails}
                     className=""
@@ -783,12 +783,12 @@ export default function Deposits() {
                 
                 <div className="space-y-4">
                   <div className="flex justify-between items-center py-2 border-b dark:border-gray-700">
-                    <span className="text-gray-600 dark:text-gray-400">Amount</span>
+                    <span className="text-gray-600 dark:text-gray-400">{t("Amount")}</span>
                     <span className="font-medium">{selectedTransaction.transaction.amount} FCFA</span>
                   </div>
                   
                   <div className="flex justify-between items-center py-2 border-b dark:border-gray-700">
-                    <span className="text-gray-600 dark:text-gray-400">Status</span>
+                    <span className="text-gray-600 dark:text-gray-400">{t("Status")}</span>
                     <span className={`font-medium ${
                       selectedTransaction.transaction.status === 'completed' 
                         ? 'text-green-600 dark:text-green-400'
@@ -802,12 +802,12 @@ export default function Deposits() {
                   </div>
                   
                   <div className="flex justify-between items-center py-2 border-b dark:border-gray-700">
-                    <span className="">Reference</span>
+                    <span className="">{t("Reference")}</span>
                     <span className="font-medium">{selectedTransaction.transaction.reference}</span>
                   </div>
                   
                   <div className="flex justify-between items-center py-2 border-b dark:border-gray-700">
-                    <span className="">Date</span>
+                    <span className="">{t("Date")}</span>
                     <span className="font-medium">
                       {new Date(selectedTransaction.transaction.created_at).toLocaleString('fr-FR')}
                     </span>
@@ -815,7 +815,7 @@ export default function Deposits() {
 
                   {selectedTransaction.transaction.phone_number && (
                     <div className="flex justify-between items-center py-2 border-b dark:border-gray-700">
-                      <span className="">Phone Number</span>
+                      <span className="">{t("Phone Number")}</span>
                       <span className="font-medium">{selectedTransaction.transaction.phone_number}</span>
                     </div>
                   )}
@@ -826,7 +826,7 @@ export default function Deposits() {
                     onClick={closeTransactionDetails}
                     className="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 transition-colors"
                   >
-                    Close
+                    {t("Close")}
                   </button>
                 </div>
               </div>

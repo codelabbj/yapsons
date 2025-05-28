@@ -202,7 +202,7 @@ export default function Withdraw() {
       case 'selectId':
         return (
           <div className="space-y-4">
-            <h2 className="text-xl font-bold">Step 1: Select Your Bet ID</h2>
+            <h2 className="text-xl font-bold">{t("Step 1: Select Your Bet ID")}</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {savedAppIds.map((idLink) => (
                 <div 
@@ -216,7 +216,7 @@ export default function Withdraw() {
               ))}
             </div>
             {savedAppIds.length === 0 && (
-              <p className="text-gray-500">No saved bet IDs found. Please add one in your profile.</p>
+              <p className="text-gray-500">{t("No saved bet IDs found. Please add one in your profile.")}</p>
             )}
           </div>
         );
@@ -224,7 +224,7 @@ export default function Withdraw() {
       case 'selectNetwork':
         return (
           <div className="space-y-4">
-            <h2 className="text-xl font-bold">Step 2: Select Network</h2>
+            <h2 className="text-xl font-bold">{t("Step 2: Select Network")}</h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {networks.map((network) => (
                 <div
@@ -249,7 +249,7 @@ export default function Withdraw() {
               onClick={() => setCurrentStep('selectId')}
               className="mt-4 px-4 py-2 text-sm text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
             >
-              ← Back to Bet IDs
+              ← {t("Back to Bet IDs")}
             </button>
           </div>
         );
@@ -257,16 +257,16 @@ export default function Withdraw() {
       case 'enterDetails':
         return (
           <div className="space-y-6">
-            <h2 className="text-xl font-bold">Step 3: Enter Withdrawal Details</h2>
+            <h2 className="text-xl font-bold">{t("Step 3: Enter Withdrawal Details")}</h2>
             
             <div className=" p-4 rounded-lg">
               <div className="grid grid-cols-2 gap-4 mb-4">
                 <div>
-                  <p className="text-sm text-gray-500">Selected Bet ID</p>
+                  <p className="text-sm text-gray-500">{t("Selected Bet ID")}</p>
                   <p className="font-medium">{selectedId?.link}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Network</p>
+                  <p className="text-sm text-gray-500">{t("Network")}</p>
                   <p className="font-medium">{selectedNetwork?.name}</p>
                 </div>
               </div>
@@ -274,7 +274,7 @@ export default function Withdraw() {
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                   <label htmlFor="withdrawalCode" className="block text-sm font-medium mb-1">
-                    Withdrawal Code
+                    {t("Withdrawal Code")}
                   </label>
                   <input
                     type="text"
@@ -283,14 +283,14 @@ export default function Withdraw() {
                     value={formData.withdrawalCode}
                     onChange={handleInputChange}
                     className="w-full p-2 border rounded-md dark:bg-gray-700 dark:border-gray-600"
-                    placeholder="Enter your withdrawal code"
+                    placeholder={t("Enter your withdrawal code")}
                     required
                   />
                 </div>
                 
                 <div>
                   <label htmlFor="phoneNumber" className="block text-sm font-medium mb-1">
-                    Phone Number
+                    {t("Phone Number")}
                   </label>
                   <input
                     type="tel"
@@ -310,14 +310,14 @@ export default function Withdraw() {
                     onClick={() => setCurrentStep('selectNetwork')}
                     className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
                   >
-                    ← Back
+                    ← {t("Back")}
                   </button>
                   <button
                     type="submit"
                     disabled={loading}
                     className="px-6 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 disabled:opacity-50"
                   >
-                    {loading ? 'Processing...' : 'Submit'}
+                    {loading ? t('Processing...') : t('Submit')}
                   </button>
                 </div>
               </form>
@@ -329,7 +329,7 @@ export default function Withdraw() {
 
   return (
     <div className="container mx-auto p-4 max-w-4xl">
-      <h1 className="text-2xl font-bold mb-6">Withdraw Funds</h1>
+      <h1 className="text-2xl font-bold mb-6">{t("Withdraw Funds")}</h1>
 
       <button
             onClick={() => window.history.back()}
@@ -349,9 +349,9 @@ export default function Withdraw() {
           const currentStepIndex = ['selectId', 'selectNetwork', 'enterDetails'].indexOf(currentStep);
           
           switch (step) {
-            case 'selectId': stepName = 'Select Bet ID'; break;
-            case 'selectNetwork': stepName = 'Select Network'; break;
-            case 'enterDetails': stepName = 'Enter Details'; break;
+            case 'selectId': stepName = t('Select Bet ID'); break;
+            case 'selectNetwork': stepName = t('Select Network'); break;
+            case 'enterDetails': stepName = t('Enter Details'); break;
           }
           
           const isCompleted = index < currentStepIndex;
@@ -414,18 +414,18 @@ export default function Withdraw() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className={`${theme.colors.background} rounded-lg shadow-xl w-full max-w-md`}>
             <div className="p-6">
-              <h3 className="text-lg font-semibold mb-4">Transaction Details</h3>
+              <h3 className="text-lg font-semibold mb-4">{t("Transaction Details")}</h3>
               <div className="space-y-2">
-                <p><span className="font-medium">Status:</span> {selectedTransaction.transaction.status}</p>
-                <p><span className="font-medium">Reference:</span> {selectedTransaction.transaction.reference}</p>
-                <p><span className="font-medium">Date:</span> {new Date(selectedTransaction.transaction.created_at).toLocaleString()}</p>
+                <p><span className="font-medium">{t("Status")}:</span> {selectedTransaction.transaction.status}</p>
+                <p><span className="font-medium">{t("Reference")}:</span> {selectedTransaction.transaction.reference}</p>
+                <p><span className="font-medium">{t("Date")}:</span> {new Date(selectedTransaction.transaction.created_at).toLocaleString()}</p>
               </div>
               <div className="mt-6 flex justify-end">
                 <button
                   onClick={() => setIsModalOpen(false)}
                   className="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700"
                 >
-                  Close
+                  {t("Close")}
                 </button>
               </div>
             </div>

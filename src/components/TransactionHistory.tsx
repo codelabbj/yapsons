@@ -1779,6 +1779,7 @@ export default function TransactionHistory() {
 const StatusBadge = ({ status }: { status: string }) => {
     const statusMap: Record<string, { text: string; className: string }> = {
       completed: { text: 'Completed', className: 'bg-green-500/10 text-green-500' },
+      payment_init_success: { text: 'Proccesing', className: 'bg-green-500/10 text-green-500' },
       accept: { text: 'Accepted', className: 'bg-green-500/10 text-green-500' },
       pending: { text: 'Pending', className: 'bg-yellow-500/10 text-yellow-500' },
       failed: { text: 'Failed', className: 'bg-red-500/10 text-red-500' },
@@ -1906,7 +1907,7 @@ const StatusBadge = ({ status }: { status: string }) => {
                       </div>
                       <div className="ml-3 group-hover:translate-x-1 transition-transform">
                         <div className="flex items-center">
-                          <span className="font-medium dark:text-white">
+                          <span className="font-medium ">
                             {item.transaction.type_trans === 'deposit' ? 'Deposit' : 'Withdrawal'}
                           </span>
                           <span className={`text-xs ml-2 px-2 py-0.5 rounded-full whitespace-nowrap ${getStatusBadgeClass(item.transaction.status)} group-hover:scale-110 transition-transform relative`}>

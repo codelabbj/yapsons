@@ -152,7 +152,13 @@ const resources = {
       "Mark as unread": "Mark as unread",
 
 
+      "Available Coupons": "Available Coupons",
+      "No Coupons Available":"No Coupons Available",
+      "Check back later!":"Check back later!",
+
+
       // Withdraw Page translations
+      "Withdraw Funds":"Withdraw Funds",
       
       "Withdraw from your account": "Withdraw from your account",
       "Please fill in all fields": "Please fill in all fields",
@@ -178,6 +184,19 @@ const resources = {
       "Submit my request": "Submit my request",
 
       //Deposit Page translations
+      "Deposit Funds": "Deposit Funds",
+      "Select Network":"Select Network",
+      "Select Bet ID":"Select Bet ID",
+      "Enter Details":"Enter Details",
+      "Step 1: Select Your Bet ID":"Step 1: Select Your Bet ID",
+      "Step 2: Select Network":"Step 2: Select Network",
+      "Step 3: Enter Details":"Step 3: Enter Details",
+      "Back to Bet IDs":"Back to Bet IDs",
+      "Phone Number":"Phone Number",
+
+      "Submit":"Submit",
+      
+      
       
       "Make deposits to your account": "Make deposits to your account",
       "Make your deposits to your account here": "Make your deposits to your account here",
@@ -196,6 +215,8 @@ const resources = {
       "Unknown App" : "Unknown ",
       "Amount": "Amount",
       "Enter deposit amount": "Enter deposit amount",
+
+      "Selected Bet ID":"Selected Bet ID",
       
       "Enter your mobile money number": "Enter your mobile money number",
       "Your mobile money number": "Your mobile money number",
@@ -330,6 +351,9 @@ const resources = {
       "Your password has been updated successfully!": "Votre mot de passe a été mis à jour avec succès !",
       "Your password has been updated successfully.": "Votre mot de passe a été mis à jour avec succès.",
       
+      "Check back later!":"Revoyez plus tard !",
+      "No Coupons Available":"Aucun coupon disponible",
+      "Available Coupons":"Coupons disponibles",
 
 
       // Transaction History translations
@@ -368,6 +392,7 @@ const resources = {
 
 
       // Withdraw Page translations
+      "Phone Number":"Numéro de téléphone",
       "Withdraw from your account": "Retirer de votre compte",
       "Please fill in all fields": "Veuillez remplir tous les champs",
       "Phone numbers do not match": "Les numéros de téléphone ne correspondent pas",
@@ -388,9 +413,25 @@ const resources = {
       "Network": "Réseau",
       "Processing...": "Traitement...",
       "Submit my request": "Soumettre ma demande",
+
+
+      "Withdraw Funds":"Retirer des fonds",
       
       // Deposit Page translations
+      "Deposit Funds":"Déposer des fonds",
+      "Select Bet ID":"Sélectionnez l'ID de pari",
+      "Enter Details":"Entrez les détails",
+      "Select Network":"Sélectionnez le réseau",
+      "Step 1: Select Your Bet ID":"Étape 1 : Sélectionnez votre ID de pari",
+      "Step 3: Enter Details":"Étape 3 : Entrez vos détails",
+      "Step 2: Select Network":"Étape 2 : Sélectionnez votre réseau",
+      "Back to Bet IDs":"Retour aux ID de pari",
+      "Selected Bet ID":"ID de pari sélectionné",
+
+      "Submit":"Soumettre",
       
+
+
       "Make deposits to your account": "Effectuez des dépôts sur votre compte",
       "Make your deposits to your account here": "Effectuez vos dépôts sur votre compte ici",
       

@@ -420,7 +420,7 @@ const CouponPage = () => {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-3xl font-bold ">Available Coupons</h1>
+                <h1 className="text-3xl font-bold ">{t("Available Coupons")}</h1>
                 {/* <p className=" mt-1">Discover amazing deals and offers</p> */}
               </div>
               <button
@@ -463,8 +463,8 @@ const CouponPage = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
                 </svg>
               </div>
-              <h3 className="text-xl font-medium  mb-2">No Coupons Available</h3>
-              <p className="">Check back later for new deals and offers!</p>
+              <h3 className="text-xl font-medium  mb-2">{t("No Coupons Available")}</h3>
+              <p className="">{t("Check back later!")}</p>
             </div>
           ) : (
             <div className="space-y-8">
