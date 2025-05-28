@@ -63,6 +63,15 @@ const resources = {
       "An unexpected error occurred.": "An unexpected error occurred.",
       "if you cant see it check your Junk folder as well": "if you cant see it check your Junk folder as well",
       "Log in": "Log in",
+      "Verify Code":"Verify Code",
+      "Confirm New Password":"Confirm New Password",
+      "OTP verified successfully":"OTP verified successfully",
+      "Create a new password for your account":"Create a new password for your account",
+      "if you cant see it check your Junk older as well":"if you cant see it check your Junk older as well",
+      "Forgot Password":"Forgot Password",
+      "Enter Verification Code":"Enter Verification Code",
+      "We sent a code to your email. Please enter it below.":"We sent a code to your email. Please enter it below.",
+      "Enter your email to receive a verification code":"Enter your email to receive a verification code",
       
       
 
@@ -297,6 +306,17 @@ const resources = {
       "An unexpected error occurred.": "Une erreur inattendue s'est produite.",
       "if you cant see it check your Junk folder as well": "si vous ne le voyez pas, vérifiez également votre dossier indésirable",
       "Log in": "Se connecter",
+
+      "Verify Code":"Vérifier le code",
+      "Confirm New Password":"Confirmez le nouveau mot de passe",
+      "OTP verified successfully":"OTP vérifié avec succès",
+      "Create a new password for your account":"Créez un nouveau mot de passe pour votre compte",
+      "if you cant see it check your Junk older as well":"si vous ne le voyez pas, vérifiez également votre dossier indésirable",
+      "Forgot Password":"Mot de passe oublié",
+      "Enter Verification Code":"Entrez le code de vérification",
+      "We sent a code to your email. Please enter it below.":"Nous avons envoyé un code à votre email. Veuillez l'entrer ci-dessous.",
+      "Enter your email to receive a verification code":"Entrez votre email pour recevoir un code de vérification",
+      
 
       // Profile Page translations
       "Profile": "Profil",
