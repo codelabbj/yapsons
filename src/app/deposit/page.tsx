@@ -368,6 +368,10 @@ interface IdLink {
   app_name: App; // This should be the full App object
 }
 
+interface WebSocketMessage {
+  type: string;
+  data?: string;
+}
 
 interface Transaction {
   id: string;
@@ -418,7 +422,7 @@ export default function Deposits() {
 
 
   useEffect(() => {
-    const handleTransactionLink = (data: any) => {
+    const handleTransactionLink = (data: WebSocketMessage) => {
       if (data.type === 'transaction_link' && data.data) {
         console.log('Opening transaction link:', data.data);
         // Try to open in a new tab
@@ -762,12 +766,12 @@ export default function Deposits() {
           </div>
         ) : (
           renderStep()
-        )}
+        )}       
       </div>
       {/* Transaction Details Modal */}
         {isModalOpen && selectedTransaction && (
-          <div className={`fixed inset-0 bg-white bg-opacity-50 flex items-center justify-center p-4 z-50`}>
-            <div className={`${theme.colors.background} rounded-lg shadow-xl w-full max-w-md`}>
+          <div className={`fixed inset-0 ${theme.colors.background}  flex items-center justify-center p-4 z-50`}>
+            <div className={`bg-white rounded-lg shadow-xl w-full max-w-md`}>
               <div className="p-6">
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="text-lg font-semibold">{t("Transaction Details")}</h3>
