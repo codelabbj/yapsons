@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import DashboardHeader from '@/components/DashboardHeader';
 import { useTheme } from '@/components/ThemeProvider';
-import { CopyIcon } from 'lucide-react';
+import { CopyIcon, X } from 'lucide-react';
 // import axios from 'axios';
 
 const BASE_URL = 'https://api.yapson.net';
@@ -34,6 +34,18 @@ interface IdLink {
   app_name: App;
 }
 
+// Modal types
+interface ModalConfirmData {
+  UserId: number;
+  Name: string;
+  CurrencyId: number;
+}
+type ModalState =
+  | null
+  | { type: 'confirm', data: ModalConfirmData }
+  | { type: 'error', message: string }
+  | { type: 'delete', id: string };
+
 export default function BetIdsPage() {
   const { t } = useTranslation();
   const { theme } = useTheme();
@@ -43,6 +55,10 @@ export default function BetIdsPage() {
   const [selectedApp, setSelectedApp] = useState('');
   const [apps, setApps] = useState<App[]>([]);
   const [loading, setLoading] = useState(true);
+  const [modal, setModal] = useState<ModalState>(null);
+  const [pendingBetId, setPendingBetId] = useState<{ link: string; appId: string } | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   // Fetch user's saved bet IDs
   const fetchBetIds = async () => {
@@ -112,21 +128,49 @@ export default function BetIdsPage() {
     }
   };
 
-  // Add new bet ID
-  const handleAddBetId = async (e: React.FormEvent) => {
+  // Search user before adding bet ID
+  const handleSearchUser = async (e: React.FormEvent) => {
     e.preventDefault();
-    
     if (!selectedApp || !newAppId.trim()) {
       console.log(t('Please select an app and enter a bet ID.'));
       return;
     }
-
     const token = localStorage.getItem('accessToken');
     if (!token) {
       console.log(t('You must be logged in to add a bet ID.'));
       return;
     }
+    try {
+      const response = await fetch(`${BASE_URL}/yapson/search-user?app_id=${selectedApp}&userid=${encodeURIComponent(newAppId.trim())}`, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      const data = await response.json();
+      if (data && data.UserId && data.UserId !== 0) {
+        setModal({ type: 'confirm', data });
+        setPendingBetId({ link: newAppId.trim(), appId: selectedApp });
+      } else {
+        setModal({ type: 'error', message: t('No account was found with the ID {{betid}}. Make sure it is spelled correctly and try again.', { betid: newAppId.trim() }) });
+      }
+    } catch {
+      setModal({ type: 'error', message: t('Failed to validate Bet ID.') });
+    }
+  };
 
+  // Confirm and add bet ID after modal
+  const handleConfirmAddBetId = async () => {
+    if (!pendingBetId) return;
+    setModal(null);
+    setError(null);
+    setSuccess(null);
+    const { appId, link: betId } = pendingBetId;
+    const token = localStorage.getItem('accessToken');
+    if (!token) {
+      setError(t('You must be logged in to add a bet ID.'));
+      return;
+    }
     try {
       const response = await fetch(`${BASE_URL}/yapson/id_link`, {
         method: 'POST',
@@ -135,36 +179,53 @@ export default function BetIdsPage() {
           'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({
-          link: newAppId.trim(),
-          app_name_id: selectedApp
+          link: betId,
+          app_name_id: appId,
         }),
       });
-
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || t('Failed to add bet ID'));
+        if (response.status === 400 && errorData) {
+          const errorMessages = Object.entries(errorData)
+            .map(([field, errors]) => {
+              if (Array.isArray(errors)) {
+                return `${field}: ${errors.join(', ')}`;
+              }
+              return `${field}: ${errors}`;
+            })
+            .join('\n');
+          throw new Error(errorMessages);
+        }
+        throw new Error(errorData.detail || t('Failed to add bet ID'));
       }
-
-      console.log(t('Bet ID added successfully!'));
+      setSuccess(t('Bet ID added successfully!'));
       setNewAppId('');
       setSelectedApp('');
+      setPendingBetId(null);
       await fetchBetIds();
-    } catch (error: any) {
-      console.error('Error adding bet ID:', error);
-      console.log(error.message || t('Failed to add bet ID'));
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        setError(error.message || t('Failed to add bet ID'));
+      } else {
+        setError(t('Failed to add bet ID'));
+      }
     }
   };
 
   // Delete bet ID
-  const handleDeleteBetId = async (id: string) => {
-    if (!confirm(t('Are you sure you want to delete this bet ID?'))) return;
+  const handleDeleteBetId = (id: string) => {
+    setModal({ type: 'delete', id });
+  };
 
+  // Confirm delete action
+  const handleConfirmDeleteBetId = async () => {
+    if (!modal || modal.type !== 'delete') return;
+    const id = modal.id;
     const token = localStorage.getItem('accessToken');
     if (!token) {
-      console.log(t('You must be logged in to delete a bet ID.'));
+      setModal({ type: 'error', message: t('You must be logged in to delete a bet ID.') });
       return;
     }
-
     try {
       const response = await fetch(`${BASE_URL}/yapson/id_link/${id}`, {
         method: 'DELETE',
@@ -173,16 +234,14 @@ export default function BetIdsPage() {
           'Authorization': `Bearer ${token}`,
         },
       });
-
       if (!response.ok) {
         throw new Error(t('Failed to delete bet ID'));
       }
-
-      console.log(t('Bet ID deleted successfully!'));
       setSavedAppIds(prev => prev.filter(item => item.id !== id));
-    } catch (error: any) {
-      console.error('Error deleting bet ID:', error);
-      console.log(error.message || t('Failed to delete bet ID'));
+      setModal(null);
+    } catch (err) {
+      const error = err as Error;
+      setModal({ type: 'error', message: error.message || t('Failed to delete bet ID') });
     }
   };
 
@@ -212,6 +271,47 @@ export default function BetIdsPage() {
 
   return (
     <div className={`min-h-screen ${theme.colors.background} ${theme.colors.text}`}>
+      {/* Modal UI */}
+      {modal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className={`bg-gradient-to-br ${theme.colors.c_background} rounded-2xl w-full max-w-md p-6 shadow-2xl animate-scaleIn`}>
+            <div className="flex justify-between items-start mb-6">
+              <h3 className="text-lg font-semibold">
+                {modal.type === 'confirm' ? t('Confirm Bet ID') : modal.type === 'delete' ? t('Delete Bet ID') : t('Error')}
+              </h3>
+              <button onClick={() => { setModal(null); setPendingBetId(null); }} className="text-gray-500 hover:text-gray-300 transition-colors">
+                <X size={20} />
+              </button>
+            </div>
+            {modal.type === 'confirm' ? (
+              <div className="space-y-4">
+                <div><span className="font-medium">{t('User Name')}:</span> {modal.data.Name}</div>
+                <div><span className="font-medium">{t('Bet ID')}:</span> {modal.data.UserId}</div>
+                <div><span className="font-medium">{t('Device')}:</span> {modal.data.CurrencyId}</div>
+                <div className="flex justify-end gap-2 mt-6">
+                  <button onClick={() => { setModal(null); setPendingBetId(null); }} className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors">{t('Cancel')}</button>
+                  <button onClick={handleConfirmAddBetId} className="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition-colors">{t('Confirm')}</button>
+                </div>
+              </div>
+            ) : modal.type === 'delete' ? (
+              <div className="space-y-4">
+                <div className="text-red-500 font-medium text-center">{t('Are you sure you want to delete this bet ID?')}</div>
+                <div className="flex justify-end gap-2 mt-6">
+                  <button onClick={() => setModal(null)} className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors">{t('Cancel')}</button>
+                  <button onClick={handleConfirmDeleteBetId} className="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition-colors">{t('Delete')}</button>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="text-red-500 font-medium text-center">{modal.message}</div>
+                <div className="flex justify-end mt-6">
+                  <button onClick={() => setModal(null)} className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors">{t('Close')}</button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
       <DashboardHeader />
       <button
             onClick={() => window.history.back()}
@@ -233,44 +333,53 @@ export default function BetIdsPage() {
             <h2 className="text-xl font-bold">{t("Betting App IDs")}</h2>
           </div>
 
+          {/* Success/Error Messages */}
+          {(success || error) && (
+            <div className={`mb-4 p-3 rounded ${success ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+              {success || error}
+            </div>
+          )}
+
           {/* Add new Bet ID */}
           <div className={`bg-gradient-to-br ${theme.colors.c_background} p-4 rounded-lg mb-6`}>
             <h3 className="font-semibold mb-4">{t("Add New Bet ID")}</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-medium mb-2">{t("App Name")}</label>
-                <select
-                  value={selectedApp}
-                  onChange={(e) => setSelectedApp(e.target.value)}
-                  className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-                >
-                  <option value="">{t("Select App")}</option>
-                  {apps.map((app) => (
-                    <option key={app.id} value={app.id}>
-                      {app.public_name || app.name}
-                    </option>
-                  ))}
-                </select>
+            <form onSubmit={handleSearchUser}>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2">{t("App Name")}</label>
+                  <select
+                    value={selectedApp}
+                    onChange={(e) => setSelectedApp(e.target.value)}
+                    className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                  >
+                    <option value="">{t("Select App")}</option>
+                    {apps.map((app) => (
+                      <option key={app.id} value={app.id}>
+                        {app.public_name || app.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">{t("User Bet ID")}</label>
+                  <input
+                    type="text"
+                    value={newAppId}
+                    onChange={(e) => setNewAppId(e.target.value)}
+                    className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                    placeholder={t("Enter your bet ID")}
+                  />
+                </div>
+                <div className="flex items-end">
+                  <button
+                    type="submit"
+                    className="w-full px-4 py-3 bg-orange-600 hover:bg-orange-700 text-white font-medium rounded-lg transition-all duration-200"
+                  >
+                    {t("Add Bet ID")}
+                  </button>
+                </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium mb-2">{t("User Bet ID")}</label>
-                <input
-                  type="text"
-                  value={newAppId}
-                  onChange={(e) => setNewAppId(e.target.value)}
-                  className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-                  placeholder={t("Enter your bet ID")}
-                />
-              </div>
-              <div className="flex items-end">
-                <button
-                  onClick={handleAddBetId}
-                  className="w-full px-4 py-3 bg-orange-600 hover:bg-orange-700 text-white font-medium rounded-lg transition-all duration-200"
-                >
-                  {t("Add Bet ID")}
-                </button>
-              </div>
-            </div>
+            </form>
           </div>
 
           {/* Saved Bet IDs */}

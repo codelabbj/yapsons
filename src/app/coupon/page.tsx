@@ -1,262 +1,6 @@
-
-// "use client"
-// import { useState, useEffect, SetStateAction, Key } from 'react';
-// import Image from 'next/image';
-// import Head from 'next/head';
-// import { useTranslation } from 'react-i18next';
-// import { StaticImport } from 'next/dist/shared/lib/get-img-props';
-
-// // Define the type for a single coupon object
-// interface Coupon {
-//   id: string; // Assuming id is a string based on usage
-//   images: string[]; // Assuming images is an array of strings (URLs)
-//   created_at: string; // Assuming created_at is a string
-//   // Add any other properties that the coupon object might have
-// }
-
-
-// const CouponPage = () => {
-//   const [coupons, setCoupons] = useState([]);
-//   const [loading, setLoading] = useState(true);
-//   const [error, setError] = useState(null);
-//   const [selectedImage, setSelectedImage] = useState(null);
-//   const { t } = useTranslation();
-
-//   // Replace with your actual base URL and token
-//   const BASE_URL = 'https://api.yapson.net';
-// useEffect(() => {
-//     const accessToken = localStorage.getItem('accessToken'); // Retrieve the access token
-//     if (!accessToken) {
-//         console.error(t('No access token found.'));
-//         window.location.href = '/';
-//         return;
-//     }
-      
-//     fetchCoupons(accessToken);
-//   }, [t]);
-
-  
-
-//   const fetchCoupons = async (accessToken: string) => {
-//     try {
-//       setLoading(true);
-//       const response = await fetch(`${BASE_URL}/yapson/coupon`, {
-//         method: 'GET',
-//         headers: {
-//           'Authorization': `Bearer ${accessToken}`,
-//           'Content-Type': 'application/json',
-//         },
-//       });
-      
-//       if (!response.ok) {
-//         const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
-//         throw new Error(`HTTP error! status: ${response.status}, message: ${errorData.message || response.statusText}`);
-//       }
-      
-//       const data = await response.json();
-//       setCoupons(data.results || []);
-
-//     } catch (err) {
-//       console.error('Error fetching coupons:', err);
-//       //setError('Failed to load coupons. Please check your token and try again.');
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   const handleImageClick = (imageUrl: SetStateAction<null>) => {
-//     setSelectedImage(imageUrl);
-//   };
-
-//   const closeModal = () => {
-//     setSelectedImage(null);
-//   };
-
-//   const formatDate = (dateString: string | number | Date) => {
-//     return new Date(dateString).toLocaleDateString('en-US', {
-//       year: 'numeric',
-//       month: 'long',
-//       day: 'numeric',
-//       hour: '2-digit',
-//       minute: '2-digit'
-//     });
-//   };
-
-//   if (loading) {
-//     return (
-//       <>
-//         <Head>
-//           <title>Coupons - yapson</title>
-//           <meta name="description" content="View all available coupons" />
-//           <meta name="viewport" content="width=device-width, initial-scale=1" />
-//         </Head>
-//         <div className="min-h-screen  flex items-center justify-center">
-//           <div className="text-center">
-//             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
-//             <p className="text-gray-600 text-lg">Loading coupons...</p>
-//           </div>
-//         </div>
-//       </>
-//     );
-//   }
-
-//   if (error) {
-//     return (
-//       <>
-//         <Head>
-//           <title>Coupons - Yapson</title>
-//           <meta name="viewport" content="width=device-width, initial-scale=1" />
-//         </Head>
-//         <div className={`min-h-screen flex items-center justify-center p-4`}>
-//           <div className="text-center max-w-md">
-//             {/* <div className="bg-red-100 rounded-full p-3 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
-//               <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-//                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-//               </svg>
-//             </div> */}
-//             <h2 className="text-2xl font-bold text-gray-800 mb-2">No Coupon yet</h2>
-//             {/* <p className="text-gray-600 mb-6">{error}</p> */}
-//             <button
-//               onClick={fetchCoupons}
-//               className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg font-medium transition-colors duration-200"
-//             >
-//               Try Again
-//             </button>
-//           </div>
-//         </div>
-//       </>
-//     );
-//   }
-
-//   return (
-//     <>
-//       <Head>
-//         <title>Coupons - BetPay</title>
-//         <meta name="description" content="View all available coupons from BetPay" />
-//         <meta name="viewport" content="width=device-width, initial-scale=1" />
-//       </Head>
-
-//       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
-//         {/* Header */}
-//         <header className="bg-white shadow-sm border-b border-gray-200">
-//           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-//             <div className="flex items-center justify-between">
-//               <div>
-//                 <h1 className="text-3xl font-bold text-gray-900">Available Coupons</h1>
-//                 <p className="text-gray-600 mt-1">Discover amazing deals and offers</p>
-//               </div>
-//               <button
-//                 onClick={fetchCoupons}
-//                 className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200 flex items-center gap-2"
-//               >
-//                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-//                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-//                 </svg>
-//                 Refresh
-//               </button>
-//             </div>
-//           </div>
-//         </header>
-
-//         {/* Main Content */}
-//         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-//           {coupons.length === 0 ? (
-//             <div className="text-center py-12">
-//               <div className="bg-gray-100 rounded-full p-3 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
-//                 <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-//                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-//                 </svg>
-//               </div>
-//               <h3 className="text-xl font-medium text-gray-900 mb-2">No Coupons Available</h3>
-//               <p className="text-gray-600">Check back later for new deals and offers!</p>
-//             </div>
-//           ) : (
-//             <div className="space-y-8">
-//               {coupons.map((coupon) => (
-//                 <div key={coupon.id} className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300">
-//                   {/* Coupon Header */}
-//                   <div className="bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-4">
-//                     <div className="flex items-center justify-between text-white">
-//                       <div>
-//                         <h3 className="text-lg font-semibold">Coupon #{coupon.id.slice(0, 8)}</h3>
-//                         <p className="text-indigo-100 text-sm">Created: {formatDate(coupon.created_at)}</p>
-//                       </div>
-//                       <div className="bg-white bg-opacity-20 px-3 py-1 rounded-full text-sm font-medium">
-//                         {coupon.images.length} Image{coupon.images.length !== 1 ? 's' : ''}
-//                       </div>
-//                     </div>
-//                   </div>
-
-//                   {/* Images Grid */}
-//                   <div className="p-6">
-//                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-//                       {coupon.images.map((imageUrl: string | SetStateAction<null> | StaticImport, index: Key | null | undefined) => (
-//                         <div
-//                           key={index}
-//                           className="relative group cursor-pointer rounded-lg overflow-hidden bg-gray-100 aspect-square"
-//                           onClick={() => handleImageClick(imageUrl)}
-//                         >
-//                           <Image
-//                             src={imageUrl}
-//                             alt={`Coupon image ${index + 1}`}
-//                             fill
-//                             className="object-cover group-hover:scale-105 transition-transform duration-300"
-//                             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-//                           />
-//                           <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300 flex items-center justify-center">
-//                             <svg className="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-//                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
-//                             </svg>
-//                           </div>
-//                         </div>
-//                       ))}
-//                     </div>
-//                   </div>
-//                 </div>
-//               ))}
-//             </div>
-//           )}
-//         </main>
-
-//         {/* Image Modal */}
-//         {selectedImage && (
-//           <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4" onClick={closeModal}>
-//             <div className="relative max-w-4xl max-h-full">
-//               <button
-//                 onClick={closeModal}
-//                 className="absolute -top-12 right-0 text-white hover:text-gray-300 transition-colors duration-200"
-//               >
-//                 <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-//                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-//                 </svg>
-//               </button>
-//               <div className="relative bg-white rounded-lg overflow-hidden">
-//                 <Image
-//                   src={selectedImage}
-//                   alt="Coupon image enlarged"
-//                   width={800}
-//                   height={600}
-//                   className="max-w-full max-h-[80vh] object-contain"
-//                   onClick={(e) => e.stopPropagation()}
-//                 />
-//               </div>
-//             </div>
-//           </div>
-//         )}
-//       </div>
-//     </>
-//   );
-// };
-
-// export default CouponPage;
-
-
-
-
 "use client"
 import { useState, useEffect } from 'react';
 import Image from 'next/image'; // Import StaticImageData
-import Head from 'next/head';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '../../components/ThemeProvider'; // Adjust the import path as necessary
 //import { StaticImport } from 'next/dist/shared/lib/get-img-props';
@@ -270,6 +14,12 @@ interface Coupon {
   // Add any other properties that the coupon object might have
 }
 
+// ------------------------------------------------------------
+// CouponPage: Client component for displaying available coupons
+// - Hydration-safe: avoids SSR/client mismatches
+// - Date formatting only on client (FormatDate component)
+// - No <Head> usage (move to parent layout/page if needed)
+// ------------------------------------------------------------
 const CouponPage = () => {
   // Use the Coupon type for the coupons state
   const [coupons, setCoupons] = useState<Coupon[]>([]);
@@ -282,6 +32,10 @@ const CouponPage = () => {
 
   // Replace with your actual base URL and token
   const BASE_URL = 'https://api.yapson.net';
+
+  // Use orange as the primary and accent color for this page
+  const orangePrimary = '#ea580c'; // Tailwind orange-600
+  const orangeAccent = '#fdba74'; // Tailwind orange-300
 
   useEffect(() => {
     const accessToken = localStorage.getItem('accessToken'); // Retrieve the access token
@@ -316,7 +70,19 @@ const CouponPage = () => {
       const data = await response.json();
       // Ensure data.results is an array before setting state
       if (Array.isArray(data.results)) {
-         setCoupons(data.results);
+         setCoupons(
+           data.results.map((coupon: unknown) => {
+             if (typeof coupon === 'object' && coupon !== null && 'id' in coupon && 'created_at' in coupon) {
+               const c = coupon as { id: string; images?: unknown; created_at: string };
+               return {
+                 ...c,
+                 images: Array.isArray(c.images) ? c.images : [],
+               };
+             }
+             // fallback for unexpected structure
+             return { id: '', images: [], created_at: '' };
+           })
+         );
       } else {
          console.error('API response results is not an array:', data);
          setCoupons([]); // Set to empty array if results is not as expected
@@ -341,209 +107,190 @@ const CouponPage = () => {
     setSelectedImage(null);
   };
 
-  const formatDate = (dateString: string | number | Date) => {
-    try {
-        return new Date(dateString).toLocaleDateString('en-US', {
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric',
-          hour: '2-digit',
-          minute: '2-digit'
-        });
-    } catch (e) {
-        console.error("Failed to parse date:", dateString, e);
-        return "Invalid Date"; // Return a fallback string
-    }
-  };
-
   if (loading) {
     return (
-      <>
-        <Head>
-          <title>Coupons - yapson</title>
-          <meta name="description" content="View all available coupons" />
-          <meta name="viewport" content="width=device-width, initial-scale=1" />
-        </Head>
-        <div className="min-h-screen  flex items-center justify-center">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
-            <p className="text-gray-600 text-lg">Loading coupons...</p>
-          </div>
+      <div className="min-h-screen  flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2" style={{ borderColor: orangePrimary }}></div>
+          <p className="text-gray-600 text-lg">Loading coupons...</p>
         </div>
-      </>
+      </div>
     );
   }
 
   if (error) {
     return (
-      <>
-        <Head>
-          <title>Coupons - Yapson</title>
-          <meta name="viewport" content="width=device-width, initial-scale=1" />
-        </Head>
-        <div className={`min-h-screen flex items-center justify-center p-4`}>
-          <div className="text-center max-w-md">
-            <h2 className="text-2xl font-bold text-gray-800 mb-2">Error Loading Coupons</h2>
-            <p className="text-gray-600 mb-6">{error}</p> {/* Display the error message */}
-            <button
-              onClick={() => {
-                 const accessToken = localStorage.getItem('accessToken');
-                 if (accessToken) {
-                    fetchCoupons(accessToken);
-                 } else {
-                    // Handle case where token is missing on retry
-                    console.error(t('No access token found for retry.'));
-                    window.location.href = '/';
-                 }
-              }}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg font-medium transition-colors duration-200"
-            >
-              Try Again
-            </button>
-          </div>
+      <div className={`min-h-screen flex items-center justify-center p-4`}>
+        <div className="text-center max-w-md">
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">Error Loading Coupons</h2>
+          <p className="text-gray-600 mb-6">{error}</p> {/* Display the error message */}
+          <button
+            onClick={() => window.location.reload()}
+            className="px-6 py-3 rounded-lg font-medium transition-colors duration-200"
+            style={{ background: orangePrimary, color: '#fff', borderRadius: theme.values.borderRadius }}
+          >
+            {t('Try Again')}
+          </button>
         </div>
-      </>
+      </div>
     );
   }
 
   return (
-    <>
-      <Head>
-        <title>Coupons - Yapson</title>
-        <meta name="description" content="View all available coupons from yapson" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-      </Head>
-
-      <div className={`min-h-screen  bg-gradient-to-br ${theme.colors.c_background}`}>
-        {/* Header */}
-        <header className={`bg-gradient-to-br ${theme.colors.a_background} shadow-sm border-b border-gray-200`}>
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-3xl font-bold ">{t("Available Coupons")}</h1>
-                {/* <p className=" mt-1">Discover amazing deals and offers</p> */}
-              </div>
-              <button
-                onClick={() => {
-                   const accessToken = localStorage.getItem('accessToken');
-                   if (accessToken) {
-                      fetchCoupons(accessToken);
-                   } else {
-                      console.error(t('No access token found for refresh.'));
-                      window.location.href = '/';
-                   }
-                }}
-                className={`bg-gradient-to-br ${theme.colors.c_background} ${theme.colors.hover} text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200 flex items-center gap-2`}
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                </svg>
-                Refresh
-              </button>
-            </div>
-           
+    <div className={`min-h-screen bg-gradient-to-br ${theme.colors.c_background} py-8`}>
+      {/* Header */}
+      <header className={`bg-gradient-to-br ${theme.colors.a_background} shadow-sm border-b border-gray-200 rounded-b-xl mb-8`}>
+        <div className="max-w-4xl mx-auto px-4 sm:px-8 py-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold " style={{ color: orangePrimary }}>{t("Available Coupons")}</h1>
+            {/* <p className="mt-1 text-base" style={{ color: theme.colors.text }}>Discover amazing deals and offers</p> */}
           </div>
-          <button
-            onClick={() => window.history.back()}
-            className="flex items-center text-md font-medium  dark:text-gray-300 dark:hover:text-white  px-4 py-2 rounded-lg shadow-sm transition-all duration-200"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-            </svg>
-            {t("Back")}
-          </button>
-        </header>
+          <div className="flex gap-2 items-center">
+            <button
+              onClick={() => window.history.back()}
+              className="flex items-center text-md font-medium px-4 py-2 rounded-lg shadow-sm transition-all duration-200"
+              style={{ color: theme.colors.text, borderRadius: theme.values.borderRadius }}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              </svg>
+              {t("Back")}
+            </button>
+          </div>
+        </div>
+      </header>
 
-        {/* Main Content */}
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {coupons.length === 0 ? (
-            <div className="text-center py-12">
-              <div className="bg-gray-100 rounded-full p-3 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
-                <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-                </svg>
-              </div>
-              <h3 className="text-xl font-medium  mb-2">{t("No Coupons Available")}</h3>
-              <p className="">{t("Check back later!")}</p>
+      {/* Main Content */}
+      <main className="max-w-4xl mx-auto px-4 sm:px-8">
+        {coupons.length === 0 ? (
+          <div className="text-center py-16">
+            <div className="rounded-full p-4 w-20 h-20 mx-auto mb-4 flex items-center justify-center" style={{ background: theme.colors.background, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+              <svg className="w-10 h-10" fill="none" stroke={orangeAccent} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+              </svg>
             </div>
-          ) : (
-            <div className="space-y-8">
-              {/* Explicitly type the coupon parameter */}
-              {coupons.map((coupon: Coupon) => (
-                <div key={coupon.id} className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300">
-                  {/* Coupon Header */}
-                  <div className="bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-4">
-                    <div className="flex items-center justify-between text-white">
-                      <div>
-                        <h3 className="text-lg font-semibold">Coupon #{coupon.id.slice(0, 8)}</h3>
-                        <p className="text-indigo-100 text-sm">Created: {formatDate(coupon.created_at)}</p>
-                      </div>
-                      <div className="bg-white bg-opacity-20 px-3 py-1 rounded-full text-sm font-medium">
-                        {coupon.images.length} Image{coupon.images.length !== 1 ? 's' : ''}
-                      </div>
-                    </div>
+            <h3 className="text-xl font-semibold mb-2" style={{ color: theme.colors.text }}>{t("No Coupons Available")}</h3>
+            <p className="text-base" style={{ color: theme.colors.secondary }}>{t("Check back later!")}</p>
+          </div>
+        ) : (
+          <div className="space-y-8">
+            {coupons.map((coupon: Coupon) => (
+              <div
+                key={coupon.id}
+                className="rounded-2xl shadow-lg overflow-hidden transition-shadow duration-300 group border"
+                style={{ background: theme.colors.background, borderColor: orangeAccent, borderWidth: '1px', borderRadius: theme.values.borderRadius }}
+              >
+                {/* Coupon Header */}
+                <div
+                  className="flex items-center justify-between px-6 py-4"
+                  style={{ background: `linear-gradient(90deg, ${orangePrimary} 60%, ${orangeAccent} 100%)`, color: '#fff', borderTopLeftRadius: theme.values.borderRadius, borderTopRightRadius: theme.values.borderRadius }}
+                >
+                  <div>
+                    <h3 className="text-lg font-semibold tracking-wide">Coupon #{coupon.id.slice(0, 8)}</h3>
+                    <p className="text-xs opacity-80">{t('Created')}: <FormatDate dateString={coupon.created_at} /></p>
                   </div>
-
-                  {/* Images Grid */}
-                  <div className="p-6">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {/* Explicitly type imageUrl and index */}
-                      {coupon.images.map((imageUrl: string, index: number) => (
-                        <div
-                          key={index}
-                          className="relative group cursor-pointer rounded-lg overflow-hidden bg-gray-100 aspect-square"
-                          onClick={() => handleImageClick(imageUrl)} // Pass the string URL
-                        >
-                          <Image
-                            src={imageUrl}
-                            alt={`Coupon image ${index + 1}`}
-                            fill
-                            className="object-cover group-hover:scale-105 transition-transform duration-300"
-                            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                          />
-                          <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300 flex items-center justify-center">
-                            <svg className="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
-                            </svg>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
+                  <div
+                    className="px-3 py-1 rounded-full text-xs font-medium shadow"
+                    style={{ background: theme.colors.background, color: orangePrimary }}
+                  >
+                    {(coupon.images?.length ?? 0)} {t('Image')}{(coupon.images?.length ?? 0) !== 1 ? 's' : ''}
                   </div>
                 </div>
-              ))}
-            </div>
-          )}
-        </main>
 
-        {/* Image Modal */}
-        {selectedImage && (
-          <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4" onClick={closeModal}>
-            <div className="relative max-w-4xl max-h-full">
-              <button
-                onClick={closeModal}
-                className="absolute -top-12 right-0 text-white hover:text-gray-300 transition-colors duration-200"
-              >
-                <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-              <div className="relative bg-white rounded-lg overflow-hidden">
-                <Image
-                  src={selectedImage} // selectedImage is now guaranteed to be a string or null
-                  alt="Coupon image enlarged"
-                  width={800}
-                  height={600}
-                  className="max-w-full max-h-[80vh] object-contain"
-                  onClick={(e) => e.stopPropagation()}
-                />
+                {/* Images Grid */}
+                <div className="p-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {(coupon.images ?? []).map((imageUrl: string, index: number) => (
+                      <div
+                        key={index}
+                        className="relative group cursor-pointer rounded-xl overflow-hidden"
+                        style={{ background: theme.colors.c_background, borderRadius: theme.values.borderRadius, boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}
+                        onClick={() => handleImageClick(imageUrl)}
+                      >
+                        <Image
+                          src={imageUrl}
+                          alt={`Coupon image ${index + 1}`}
+                          fill
+                          className="object-cover group-hover:scale-105 transition-transform duration-300"
+                          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                          style={{ borderRadius: theme.values.borderRadius, border: `2px solid ${orangeAccent}` }}
+                        />
+                        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300 flex items-center justify-center rounded-xl">
+                          <svg className="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+                          </svg>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
-            </div>
+            ))}
           </div>
         )}
-      </div>
-    </>
+      </main>
+
+      {/* Image Modal */}
+      {selectedImage && (
+        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4 animate-fade-in" onClick={closeModal}>
+          <div className="relative max-w-4xl max-h-full w-full animate-scale-in" style={{ borderRadius: theme.values.borderRadius }}>
+            <button
+              onClick={closeModal}
+              className="absolute -top-12 right-0 text-white hover:text-gray-300 transition-colors duration-200"
+            >
+              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+            <div className="relative bg-white dark:bg-gray-900 rounded-lg overflow-hidden" style={{ borderRadius: theme.values.borderRadius }}>
+              <Image
+                src={selectedImage}
+                alt="Coupon image enlarged"
+                width={800}
+                height={600}
+                className="max-w-full max-h-[80vh] object-contain"
+                onClick={(e) => e.stopPropagation()}
+                style={{ borderRadius: theme.values.borderRadius, border: `2px solid ${orangeAccent}` }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Animations */}
+      <style jsx>{`
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        @keyframes scaleIn {
+          from { opacity: 0; transform: scale(0.95); }
+          to { opacity: 1; transform: scale(1); }
+        }
+        .animate-fade-in { animation: fadeIn 0.3s ease-out forwards; }
+        .animate-scale-in { animation: scaleIn 0.3s ease-out forwards; }
+      `}</style>
+    </div>
   );
+};
+
+// Add a FormatDate component for clarity
+const FormatDate = ({ dateString }: { dateString: string }) => {
+  const [formatted, setFormatted] = useState<string>("...");
+  useEffect(() => {
+    if (dateString) {
+      setFormatted(
+        new Date(dateString).toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+        })
+      );
+    }
+  }, [dateString]);
+  return <>{formatted}</>;
 };
 
 export default CouponPage;

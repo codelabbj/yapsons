@@ -104,11 +104,12 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 // Create a provider component
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // Read initial theme from <html data-theme>
+  // Read initial theme from localStorage, then system preference, then fallback
   const getInitialTheme = (): ThemeMode => {
     if (typeof window === 'undefined') return 'light'; // SSR fallback
-    const attr = document.documentElement.getAttribute('data-theme');
-    if (attr === 'dark' || attr === 'light') return attr;
+    const stored = localStorage.getItem('theme');
+    if (stored === 'dark' || stored === 'light') return stored as ThemeMode;
+    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) return 'dark';
     return 'light';
   };
 
