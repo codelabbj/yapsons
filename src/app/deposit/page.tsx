@@ -227,11 +227,12 @@ export default function Deposits() {
     try {
       const token = localStorage.getItem('accessToken');
       if (!token) throw new Error('Not authenticated');
-      
+      // Sanitize phone number before sending
+      const sanitizedPhoneNumber = formData.phoneNumber.replace(/\s+/g, '');
       const response = await axios.post('https://api.yapson.net/yapson/transaction', {
         type_trans: 'deposit',
         amount: formData.amount,
-        phone_number: formData.phoneNumber,
+        phone_number: sanitizedPhoneNumber,
         network_id: selectedNetwork.id,
         app_id: selectedPlatform.id,
         user_app_id: formData.betid

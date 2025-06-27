@@ -93,6 +93,7 @@ export default function Withdraw() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<TransactionDetail | null>(null);
   const { theme } = useTheme();
+  const [showHowTo, setShowHowTo] = useState(false);
 
 
   const fetchPlatforms = async () => {
@@ -198,11 +199,12 @@ export default function Withdraw() {
     try {
       const token = localStorage.getItem('accessToken');
       if (!token) throw new Error('Not authenticated');
-      
+      // Sanitize phone number before sending
+      const sanitizedPhoneNumber = formData.phoneNumber.replace(/\s+/g, '');
       const response = await axios.post('https://api.yapson.net/yapson/transaction', {
         type_trans: 'withdrawal',
         withdriwal_code: formData.withdrawalCode,
-        phone_number: formData.phoneNumber,
+        phone_number: sanitizedPhoneNumber,
         network_id: selectedNetwork.id,
         app_id: selectedPlatform.id,
         user_app_id: formData.betid
@@ -440,6 +442,37 @@ export default function Withdraw() {
     <div className="container mx-auto p-4 max-w-4xl">
       <h1 className="text-2xl font-bold mb-6">{t("Withdraw Funds")}</h1>
 
+      {/* Flashing Info Icon and How-To Sentence */}
+      <div className="flex items-center mb-4">
+        <button
+          type="button"
+          aria-label="Comment retirer ?"
+          className="flex items-center gap-2 focus:outline-none"
+          onClick={() => setShowHowTo((prev) => !prev)}
+        >
+          <span className="relative flex items-center justify-center w-8 h-8 rounded-full border border-orange-500 bg-white dark:bg-gray-800 animate-flash-info">
+            <span className="text-orange-600 font-bold text-lg">i</span>
+          </span>
+          <span className="text-orange-600 font-medium animate-flash-text cursor-pointer">
+            Comment retirer ?
+          </span>
+        </button>
+      </div>
+      {/* Dropdown for How to Withdraw */}
+      {showHowTo && (
+        <div className="mb-6 p-4 bg-orange-50 border-l-4 border-orange-400 rounded animate-scale-in text-gray-800 dark:bg-orange-950 dark:text-orange-100">
+          <h2 className="font-semibold mb-2 text-orange-700 dark:text-orange-300">Comment fonctionne le retrait ?</h2>
+          <ul className="list-disc pl-5 space-y-1">
+            <li>Sélectionnez d&apos;abord la plateforme de pari sur laquelle vous souhaitez retirer vos fonds.</li>
+            <li>Choisissez le réseau de paiement (par exemple, Orange Money, Wave, etc.).</li>
+            <li>Ajoutez ou sélectionnez votre Bet ID enregistré pour cette plateforme.</li>
+            <li>Entrez le code de retrait fourni par la plateforme de pari et votre numéro de téléphone mobile.</li>
+            <li>Validez la demande. Vous recevrez une notification une fois le retrait traité.</li>
+            <li>Assurez-vous que les informations saisies sont correctes pour éviter tout retard.</li>
+          </ul>
+        </div>
+      )}
+
       <button
             onClick={() => window.history.back()}
             className="flex items-center text-md font-medium  dark:text-gray-300 dark:hover:text-white  px-4 py-2 rounded-lg shadow-sm transition-all duration-200"
@@ -564,6 +597,20 @@ export default function Withdraw() {
         
         .animate-scale-in {
           animation: scaleIn 0.3s ease-out forwards;
+        }
+        @keyframes flashInfo {
+          0%, 100% { box-shadow: 0 0 0 0 rgba(255, 152, 0, 0.7); }
+          50% { box-shadow: 0 0 8px 4px rgba(255, 152, 0, 0.5); }
+        }
+        .animate-flash-info {
+          animation: flashInfo 1.2s infinite;
+        }
+        @keyframes flashText {
+          0%, 100% { color: #ea580c; }
+          50% { color: #fbbf24; }
+        }
+        .animate-flash-text {
+          animation: flashText 1.2s infinite;
         }
       `}</style>
     </div>

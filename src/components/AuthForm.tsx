@@ -133,13 +133,17 @@ const { theme } = useTheme();
       }
     }
   
+    // Sanitize phone and emailOrPhone before sending
+    const sanitizedPhone = phone.replace(/\s+/g, '');
+    const sanitizedEmailOrPhone = emailOrPhone.replace(/\s+/g, '');
+  
     const payload = isLogin
-      ? { email_or_phone: emailOrPhone, password }
+      ? { email_or_phone: sanitizedEmailOrPhone, password }
       : {
           first_name: fullName.split(' ')[0] || '',
           last_name: fullName.split(' ')[1] || '',
           email,
-          phone,
+          phone: sanitizedPhone,
           phone_indicative: '+229',
           password,
           re_password: confirmPassword,
