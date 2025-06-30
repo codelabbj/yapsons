@@ -8,9 +8,19 @@ interface Coupon {
   date: string;
 }
 
+// Define the type for the API coupon object
+interface ApiCoupon {
+  bet_app?: { public_name?: string; name?: string };
+  code?: string;
+  coupon_code?: string;
+  id?: string;
+  date?: string;
+  created_at?: string;
+}
+
 const CouponPage = () => {
   const [mounted, setMounted] = useState(false);
-  const [coupon, setCoupon] = useState<Coupon | null>(null);
+  const [coupons, setCoupons] = useState<Coupon[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
@@ -42,14 +52,14 @@ const CouponPage = () => {
         const data = await response.json();
         if (Array.isArray(data.results) && data.results.length > 0) {
           // Map API fields to our UI fields. Adjust as needed.
-          const c = data.results[0];
-          setCoupon({
+          const mappedCoupons = data.results.map((c: ApiCoupon) => ({
             app: (c.bet_app && (c.bet_app.public_name || c.bet_app.name)) || '',
             code: c.code || c.coupon_code || c.id,
             date: c.date || c.created_at || '',
-          });
+          }));
+          setCoupons(mappedCoupons);
         } else {
-          setCoupon(null);
+          setCoupons([]);
         }
       } catch (err: unknown) {
         let message = 'An error occurred.';
@@ -64,12 +74,10 @@ const CouponPage = () => {
     fetchCoupon();
   }, [mounted]);
 
-  const handleCopy = () => {
-    if (coupon) {
-      navigator.clipboard.writeText(coupon.code);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1200);
-    }
+  const handleCopy = (code: string) => {
+    navigator.clipboard.writeText(code);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1200);
   };
 
   // Fallbacks for theme
@@ -112,42 +120,46 @@ const CouponPage = () => {
                 Try Again
               </button>
             </div>
-          ) : !coupon ? (
+          ) : coupons.length === 0 ? (
             <div className={`rounded-2xl shadow p-6 text-center bg-gradient-to-br ${theme.colors.background}`} style={{ borderRadius }}>
               <div className="text-gray-700 font-semibold">No coupon available.</div>
             </div>
           ) : (
-            <div className={`rounded-2xl shadow p-6 bg-gradient-to-br ${theme.colors.background}`} style={{ borderRadius }}>
-              <div className="flex flex-col gap-4">
-                {/* App Row */}
-                <div className="flex justify-between items-center">
-                  <span className="font-bold text-base" style={{ color: textColor }}>App</span>
-                  <span className="text-base" style={{ color: textColor }}>{coupon.app}</span>
+            <div className="flex flex-col gap-6">
+              {coupons.map((coupon, idx) => (
+                <div key={idx} className={`rounded-2xl shadow p-6 bg-gradient-to-br ${theme.colors.background}`} style={{ borderRadius }}>
+                  <div className="flex flex-col gap-4">
+                    {/* App Row */}
+                    <div className="flex justify-between items-center">
+                      <span className="font-bold text-base" style={{ color: textColor }}>App</span>
+                      <span className="text-base" style={{ color: textColor }}>{coupon.app}</span>
+                    </div>
+                    {/* Code Row */}
+                    <div className="flex justify-between items-center">
+                      <span className="font-bold text-base" style={{ color: textColor }}>Code</span>
+                      <span className="flex items-center gap-2">
+                        <span className="text-base tracking-widest" style={{ color: textColor }}>{coupon.code}</span>
+                        <button
+                          onClick={() => handleCopy(coupon.code)}
+                          className="p-1 rounded hover:bg-gray-200"
+                          aria-label="Copy code"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <rect x="9" y="9" width="13" height="13" rx="2" stroke="currentColor" strokeWidth="2"/>
+                            <rect x="3" y="3" width="13" height="13" rx="2" stroke="currentColor" strokeWidth="2"/>
+                          </svg>
+                        </button>
+                        {copied && <span className="text-xs text-green-600 ml-1">Copied!</span>}
+                      </span>
+                    </div>
+                    {/* Date Row */}
+                    <div className="flex justify-between items-center">
+                      <span className="font-bold text-base" style={{ color: textColor }}>Date</span>
+                      <span className="text-base" style={{ color: textColor }}>{coupon.date ? coupon.date.slice(0, 10) : ''}</span>
+                    </div>
+                  </div>
                 </div>
-                {/* Code Row */}
-                <div className="flex justify-between items-center">
-                  <span className="font-bold text-base" style={{ color: textColor }}>Code</span>
-                  <span className="flex items-center gap-2">
-                    <span className="text-base tracking-widest" style={{ color: textColor }}>{coupon.code}</span>
-                    <button
-                      onClick={handleCopy}
-                      className="p-1 rounded hover:bg-gray-200"
-                      aria-label="Copy code"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <rect x="9" y="9" width="13" height="13" rx="2" stroke="currentColor" strokeWidth="2"/>
-                        <rect x="3" y="3" width="13" height="13" rx="2" stroke="currentColor" strokeWidth="2"/>
-                      </svg>
-                    </button>
-                    {copied && <span className="text-xs text-green-600 ml-1">Copied!</span>}
-                  </span>
-                </div>
-                {/* Date Row */}
-                <div className="flex justify-between items-center">
-                  <span className="font-bold text-base" style={{ color: textColor }}>Date</span>
-                  <span className="text-base" style={{ color: textColor }}>{coupon.date ? coupon.date.slice(0, 10) : ''}</span>
-                </div>
-              </div>
+              ))}
             </div>
           )}
         </div>
