@@ -70,20 +70,41 @@ interface TransactionDetail {
 //   };
 //   status?: number;
 // }
+
+interface DepositNetwork {
+  id: string;
+  name: string;
+  public_name: string;
+  image?: string;
+  otp_required?: boolean;
+  tape_code?: string;
+}
+
+type TransactionData = {
+  type_trans: string;
+  amount: string;
+  phone_number: string;
+  network_id: string;
+  app_id: string;
+  user_app_id: string;
+  otp_code?: string;
+};
+
 export default function Deposits() {
   const [mounted, setMounted] = useState(false);
   const { t } = useTranslation();
   const [currentStep, setCurrentStep] = useState<'selectId' | 'selectNetwork' | 'addBetId' | 'enterDetails'>('selectId');
   const [selectedPlatform, setSelectedPlatform] = useState<App | null>(null);
   const [platforms, setPlatforms] = useState<App[]>([]);
-  const [selectedNetwork, setSelectedNetwork] = useState<{ id: string; name: string; public_name: string; image?: string } | null>(null);
+  const [selectedNetwork, setSelectedNetwork] = useState<DepositNetwork | null>(null);
   const [formData, setFormData] = useState({
     amount: '',
     phoneNumber: '',
     betid: '',
+    otp_code: '', // Added OTP code to form state
   });
   
-  const [networks, setNetworks] = useState<{ id: string; name: string; public_name: string; image?: string }[]>([]);
+  const [networks, setNetworks] = useState<DepositNetwork[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -197,7 +218,7 @@ export default function Deposits() {
     setCurrentStep('selectNetwork');
   };
 
-  const handleNetworkSelect = (network: { id: string; name: string; public_name: string; image?: string }) => {
+  const handleNetworkSelect = (network: DepositNetwork) => {
     setSelectedNetwork(network);
     setCurrentStep('enterDetails');
   };
@@ -229,14 +250,18 @@ export default function Deposits() {
       if (!token) throw new Error('Not authenticated');
       // Sanitize phone number before sending
       const sanitizedPhoneNumber = formData.phoneNumber.replace(/\s+/g, '');
-      const response = await axios.post('https://api.yapson.net/yapson/transaction', {
+      const transactionData: TransactionData = {
         type_trans: 'deposit',
         amount: formData.amount,
         phone_number: sanitizedPhoneNumber,
         network_id: selectedNetwork.id,
         app_id: selectedPlatform.id,
         user_app_id: formData.betid
-      }, {
+      };
+      if (selectedNetwork.otp_required && formData.otp_code) {
+        transactionData.otp_code = formData.otp_code;
+      }
+      const response = await axios.post('https://api.yapson.net/yapson/transaction', transactionData, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
@@ -249,7 +274,7 @@ export default function Deposits() {
       setCurrentStep('selectId');
       setSelectedPlatform(null);
       setSelectedNetwork(null);
-      setFormData({ amount: '', phoneNumber: '', betid: '' });
+      setFormData({ amount: '', phoneNumber: '', betid: '', otp_code: '' });
     } catch (err) {
       console.error('Transaction error:', err);
       if (
@@ -463,6 +488,21 @@ const renderStep = () => {
                 placeholder={t("Enter phone number")}
               />
             </div>
+            {/* OTP input if required by network */}
+            {selectedNetwork?.otp_required && (
+              <div>
+                <label className="block text-sm font-medium mb-1">{t("OTP Code")}</label>
+                <input
+                  type="text"
+                  value={formData.otp_code}
+                  onChange={e => setFormData(prev => ({ ...prev, otp_code: e.target.value }))}
+                  required={selectedNetwork?.otp_required}
+                  className="w-full p-2 border rounded"
+                  placeholder={t("Enter OTP code")}
+                />
+                <p className="text-xs text-gray-500 mt-1">{selectedNetwork?.tape_code || t("Enter the OTP you received")}</p>
+              </div>
+            )}
             <div className="flex justify-between pt-2">
               <button
                 type="button"
@@ -473,7 +513,7 @@ const renderStep = () => {
               </button>
               <button
                 type="submit"
-                disabled={loading}
+                disabled={loading || (selectedNetwork?.otp_required && !formData.otp_code)}
                 className="px-6 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 disabled:opacity-50"
               >
                 {loading ? t('Processing...') : t('Submit')}
