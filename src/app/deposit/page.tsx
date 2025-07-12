@@ -77,7 +77,7 @@ interface DepositNetwork {
   public_name: string;
   image?: string;
   otp_required?: boolean;
-  tape_code?: string;
+  info?: string;
 }
 
 type TransactionData = {
@@ -500,7 +500,7 @@ const renderStep = () => {
                   className="w-full p-2 border rounded"
                   placeholder={t("Enter OTP code")}
                 />
-                <p className="text-xs text-gray-500 mt-1">{selectedNetwork?.tape_code || t("Enter the OTP you received")}</p>
+                <p className="text-xs text-gray-500 mt-1">{selectedNetwork?.info || t("Enter the OTP you received")}</p>
               </div>
             )}
             <div className="flex justify-between pt-2">
