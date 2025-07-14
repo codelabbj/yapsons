@@ -468,10 +468,10 @@ export default function LeftSideContent() {
         {/* Text Overlay */}
         <div className="absolute top-0 left-0 w-full p-6 z-10">
           <h3 className="text-xl md:text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-orange-500 to-orange-600">
-            {t("Secure Global Payments")}
+            {t("Paiements mondiaux sécurisés")}
           </h3>
           <p className={`mt-2 max-w-xs ${isDarkMode ? 'text-gray-300' : 'text-gray-700'} transition-colors duration-300`}>
-           {t("Fast, secure transactions with real-time tracking")}
+           {t("Transactions rapides et sécurisées avec suivi en temps réel")}
           </p>
         </div>
         

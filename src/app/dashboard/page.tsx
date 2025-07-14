@@ -37,7 +37,7 @@ export default function Dashboard() {
         <div className="absolute inset-0 bg-gray-900/90 z-50 flex items-center justify-center">
           <div className="flex flex-col items-center gap-3">
             <div className="w-16 h-16 border-4 border-gray-700 border-t-orange-500 rounded-full animate-spin"></div>
-            <p className="text-gray-400">Loading Yapson...</p>
+            <p className="text-gray-400">Chargement de Yapson...</p>
           </div>
         </div>
       )}
@@ -48,7 +48,7 @@ export default function Dashboard() {
       {/* Main Content */}
       <main className="py-4 md:py-6 px-4 md:px-6">
         <h1 className={`text-xl md:text-2xl font-bold mb-4 md:mb-6 relative inline-block ${animateHeader ? 'animate-fadeIn' : 'opacity-0'}`}>
-          {t("Welcome to Yapson")}
+          {t("Bienvenue sur Yapson")}
           <span className="absolute bottom-0 left-0 w-full h-0.5 bg-orange-500 scale-x-0 group-hover:scale-x-100 origin-left transition-transform duration-300 animate-widthExpand"></span>
         </h1>
         
@@ -62,14 +62,14 @@ export default function Dashboard() {
               <div className="w-12 h-12 rounded-full bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center mb-2 group-active:scale-90 transition-transform">
                 <ArrowDownLeft size={18} className="text-white" />
               </div>
-              <span className=" font-medium text-xs">{t("DEPOSIT")}</span>
+              <span className=" font-medium text-xs">{t("DÉPÔT")}</span>
             </a>
             {/* Retrait Button */}
             <a href="/withdraw" className="group relative flex-1 flex flex-col items-center justify-center p-3 transition-all duration-300 active:scale-95">
               <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center mb-2 group-active:scale-90 transition-transform">
                 <ArrowUpRight size={18} className="text-white" />
               </div>
-              <span className=" font-medium text-xs">{t("WITHDRAW")}</span>
+              <span className=" font-medium text-xs">{t("RETRAIT")}</span>
             </a>
             {/* Coupon Button */}
             <a href="/coupon" className="group relative flex-1 flex flex-col items-center justify-center p-3 transition-all duration-300 active:scale-95">
@@ -83,7 +83,7 @@ export default function Dashboard() {
               <div className="w-12 h-12 rounded-full bg-gradient-to-br from-pink-500 to-pink-600 flex items-center justify-center mb-2 group-active:scale-90 transition-transform">
                 <CreditCard size={18} className="text-white" />
               </div>
-              <span className=" font-medium text-xs">{t("MY ID")}</span>
+              <span className=" font-medium text-xs">{t("MES ID")}</span>
             </a>
           </div>
           {/* Desktop Layout (Horizontal) */}
@@ -92,7 +92,7 @@ export default function Dashboard() {
               <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-orange-500 to-orange-700 opacity-0 group-hover:opacity-100 transition-opacity"></span>
               <span className="absolute -inset-px bg-gradient-to-r from-orange-400 to-orange-600 opacity-0 group-hover:opacity-30 group-hover:animate-pulse rounded-lg"></span>
               <span className="relative z-10 flex items-center gap-2">
-                {t("DEPOSIT")}
+                {t("DÉPÔT")}
                 <ArrowDownLeft size={16} className="transition-transform group-hover:translate-y-1 group-hover:animate-bounce" />
               </span>
             </a>
@@ -100,7 +100,7 @@ export default function Dashboard() {
             <a className="group relative flex-none flex items-center justify-center gap-2 bg-gray-800 hover:bg-gray-700 text-white font-medium py-3 px-6 rounded-lg transition-all duration-300 transform hover:scale-105 active:scale-95 w-40 border border-gray-700 overflow-hidden" href='/withdraw'>
               <span className="absolute inset-0 w-0 h-full bg-orange-600/20 transition-all duration-300 group-hover:w-full"></span>
               <span className="relative z-10 flex items-center gap-2">
-                {t("WITHDRAW")}
+                {t("RETRAIT")}
                 <ArrowUpRight size={16} className="transition-transform group-hover:translate-y-1 group-hover:-translate-x-1 group-hover:animate-pulse" />
               </span>
             </a>
@@ -114,7 +114,7 @@ export default function Dashboard() {
             <a className="group relative flex-none flex items-center justify-center gap-2 bg-gray-800 hover:bg-gray-700 text-white font-medium py-3 px-6 rounded-lg transition-all duration-300 transform hover:scale-105 active:scale-95 w-40 border border-gray-700 overflow-hidden" href='/bet_id'>
               <span className="absolute inset-0 w-0 h-full bg-orange-600/20 transition-all duration-300 group-hover:w-full"></span>
               <span className="relative z-10 flex items-center gap-2">
-                {t("MY ID")}
+                {t("MES ID")}
                 <CreditCard size={16} className="transition-transform group-hover:translate-x-1 group-hover:animate-pulse" />
               </span>
             </a>
@@ -142,7 +142,7 @@ export default function Dashboard() {
             
             {/* Tooltip */}
             <div className="absolute right-full mr-3 top-1/2 transform -translate-y-1/2 bg-gray-900 text-white px-3 py-2 rounded-lg text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">
-              Contact us on WhatsApp
+              Contactez-nous sur WhatsApp
               <div className="absolute top-1/2 left-full transform -translate-y-1/2 border-4 border-transparent border-l-gray-900"></div>
             </div>
           </a>

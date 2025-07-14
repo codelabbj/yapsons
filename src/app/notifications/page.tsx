@@ -5,6 +5,7 @@ import { Bell, Check, CheckCheck, ArrowLeft, RefreshCw } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useRouter } from 'next/navigation';
 import { useTheme } from '../../components/ThemeProvider';
+import api from '../../../utils/api';
 //import { markNotificationAsRead } from '../../utils/notifications';
 
 
@@ -75,29 +76,13 @@ export default function NotificationsPage() {
   };
 
   const fetchNotifications = async (pageNum = 1) => {
-    const accessToken = localStorage.getItem('accessToken');
-    if (!accessToken) {
-      console.error('No access token found');
-      setError('Please log in to view notifications');
-      return;
-    }
-
-    // Don't fetch if we've fetched within the last second (prevents duplicate fetches)
-    const now = Date.now();
-    if (now - lastFetchTimeRef.current < 1000 && pageNum === 1) {
-      return;
-    }
-    lastFetchTimeRef.current = now;
-
     try {
       setLoading(true);
-      const res = await fetch(`https://api.yapson.net/yapson/notification?page=${pageNum}`, {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      });
+      const res = await api.get(`/yapson/notification?page=${pageNum}`);
 
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      if (res.status !== 200) throw new Error(`HTTP ${res.status}`);
 
-      const data = await res.json();
+      const data = res.data;
 
       if (data?.results?.length > 0) {
         // Apply local read status to the fetched notifications

@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { Trash2, PlusCircle } from 'lucide-react';
 //import Head from 'next/head';
-import axios from 'axios';
+import api from '../../../utils/api';
 import { useTranslation } from 'react-i18next';
 //import styles from '../styles/Deposits.module.css';
 //import { ClipboardIcon } from 'lucide-react'; // Make sure to install this package
@@ -36,6 +36,8 @@ interface App {
   withdrawal_tuto_content: string;
   withdrawal_link: string;
   public_name: string;
+  minimun_deposit?: number;
+  max_deposit?: number;
 }
 
 interface WebSocketMessage {
@@ -79,16 +81,6 @@ interface DepositNetwork {
   otp_required?: boolean;
   info?: string;
 }
-
-type TransactionData = {
-  type_trans: string;
-  amount: string;
-  phone_number: string;
-  network_id: string;
-  app_id: string;
-  user_app_id: string;
-  otp_code?: string;
-};
 
 export default function Deposits() {
   const [mounted, setMounted] = useState(false);
@@ -135,24 +127,9 @@ export default function Deposits() {
 
   // Fetch networks and saved app IDs on component mount
   const fetchPlatforms = async () => {
-    const token = localStorage.getItem('accessToken');
-    if (!token) return;
-
     try {
-      const response = await fetch('https://api.yapson.net/yapson/app_name', {
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}` 
-        },
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        setPlatforms(Array.isArray(data) ? data : []);
-      } else {
-        console.error('Failed to fetch platforms:', response.status);
-        setPlatforms([]);
-      }
+      const response = await api.get('/yapson/app_name');
+      setPlatforms(Array.isArray(response.data) ? response.data : []);
     } catch (error) {
       console.error('Error fetching platforms:', error);
       setPlatforms([]);
@@ -162,47 +139,33 @@ export default function Deposits() {
   // Fetch networks and saved app IDs on component mount
   useEffect(() => {
     const fetchData = async () => {
-      const token = localStorage.getItem('accessToken');
-      if (!token) {
-        setError(t('You must be logged in to access this feature.'));
-        setLoading(false);
-        window.location.href = '/';
-        return;
-      }
-
       try {
         setLoading(true);
         // Fetch all data in parallel
         const [networksResponse, savedIdsResponse] = await Promise.all([
-          fetch('https://api.yapson.net/yapson/network/', {
-            headers: { Authorization: `Bearer ${token}` }
-          }),
-          fetch('https://api.yapson.net/yapson/id_link', {
-            headers: { Authorization: `Bearer ${token}` }
-          }),
+          api.get('/yapson/network/'),
+          api.get('/yapson/id_link'),
           fetchPlatforms() // Fetch platforms in parallel
         ]);
 
-        if (networksResponse.ok) {
-          const networksData = await networksResponse.json();
-          setNetworks(networksData);
+        if (networksResponse.data) {
+          setNetworks(networksResponse.data);
         }
 
-        if (savedIdsResponse.ok) {
-          const data = await savedIdsResponse.json();
+        if (savedIdsResponse.data) {
           let processedData: { id: string; user: string; link: string; app_name: App }[] = [];
-          if (Array.isArray(data)) {
-            processedData = data;
-          } else if (data?.results) {
-            processedData = data.results;
-          } else if (data?.data) {
-            processedData = data.data;
+          if (Array.isArray(savedIdsResponse.data)) {
+            processedData = savedIdsResponse.data;
+          } else if (savedIdsResponse.data?.results) {
+            processedData = savedIdsResponse.data.results;
+          } else if (savedIdsResponse.data?.data) {
+            processedData = savedIdsResponse.data.data;
           }
           setSavedAppIds(processedData);
         }
       } catch (err) {
         console.error('Error fetching data:', err);
-        setError(t('Failed to load data. Please try again later.'));
+        setError(t('Impossible de charger les données. Veuillez réessayer plus tard.'));
       } finally {
         setLoading(false);
       }
@@ -210,6 +173,14 @@ export default function Deposits() {
 
     fetchData();
   }, []);
+
+  // Auto-hide error after 4 seconds
+  useEffect(() => {
+    if (error) {
+      const timer = setTimeout(() => setError(''), 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [error]);
 
   if (!mounted) return null;
 
@@ -225,16 +196,9 @@ export default function Deposits() {
 
   // Delete Bet ID
   const handleDeleteBetId = async (betId: string) => {
-    const token = localStorage.getItem('accessToken');
-    if (!token) return;
     try {
-      const response = await fetch(`https://api.yapson.net/yapson/id_link/${betId}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      if (response.ok) {
-        setSavedAppIds(prev => prev.filter(id => id.id !== betId));
-      }
+      await api.delete(`/yapson/id_link/${betId}`);
+      setSavedAppIds(prev => prev.filter(id => id.id !== betId));
     } catch (error) {
       console.error('Error deleting bet ID:', error);
     }
@@ -246,30 +210,20 @@ export default function Deposits() {
     
     setLoading(true);
     try {
-      const token = localStorage.getItem('accessToken');
-      if (!token) throw new Error('Not authenticated');
-      // Sanitize phone number before sending
-      const sanitizedPhoneNumber = formData.phoneNumber.replace(/\s+/g, '');
-      const transactionData: TransactionData = {
+      const response = await api.post('/yapson/transaction', {
         type_trans: 'deposit',
         amount: formData.amount,
-        phone_number: sanitizedPhoneNumber,
+        phone_number: formData.phoneNumber.replace(/\s+/g, ''),
         network_id: selectedNetwork.id,
         app_id: selectedPlatform.id,
         user_app_id: formData.betid
-      };
-      if (selectedNetwork.otp_required && formData.otp_code) {
-        transactionData.otp_code = formData.otp_code;
-      }
-      const response = await axios.post('https://api.yapson.net/yapson/transaction', transactionData, {
-        headers: { Authorization: `Bearer ${token}` }
       });
 
       const transaction = response.data;
       setSelectedTransaction({ transaction });
       setIsModalOpen(true);
       
-      setSuccess('Transaction initiated successfully!');
+      setSuccess('Transaction initiée avec succès!');
       // Reset form
       setCurrentStep('selectId');
       setSelectedPlatform(null);
@@ -277,17 +231,36 @@ export default function Deposits() {
       setFormData({ amount: '', phoneNumber: '', betid: '', otp_code: '' });
     } catch (err) {
       console.error('Transaction error:', err);
+      // Enhanced error handling for backend field errors
+      let errorMsg = 'Échec du traitement de la transaction';
       if (
         typeof err === 'object' &&
         err !== null &&
         'response' in err &&
         typeof (err as { response?: unknown }).response === 'object'
       ) {
-        const response = (err as { response?: { data?: { detail?: string } } }).response;
-        setError(response?.data?.detail || 'Failed to process transaction');
-      } else {
-        setError('Failed to process transaction');
+        const response = (err as { response?: { data?: Record<string, unknown> } }).response;
+        const data = response?.data as Record<string, unknown> | undefined;
+        if (data && typeof data === 'object') {
+          // If data is an object with arrays of errors
+          const messages: string[] = [];
+          for (const key in data) {
+            if (Array.isArray(data[key])) {
+              messages.push(...(data[key] as string[]));
+            } else if (typeof data[key] === 'string') {
+              messages.push(data[key] as string);
+            }
+          }
+          if (messages.length > 0) {
+            errorMsg = messages.join(' ');
+          } else if ('detail' in data && typeof data.detail === 'string') {
+            errorMsg = data.detail;
+          }
+        } else if (data && 'detail' in data && typeof (data as { detail?: unknown }).detail === 'string') {
+          errorMsg = (data as { detail?: string }).detail!;
+        }
       }
+      setError(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -308,27 +281,41 @@ const renderStep = () => {
     case 'selectId':
       return (
         <div className="space-y-4">
-          {/* <h2 className="text-xl font-bold">{t("Step 1: Select Your Betting Platform")}</h2> */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {platforms.map((platform) => (
               <div 
                 key={platform.id}
                 onClick={() => handlePlatformSelect(platform)}
-                className={`p-4 border rounded-lg cursor-pointer ${theme.colors.hover} transition-colors`}
-                >
-                <div className="font-medium">{platform.public_name || platform.name}</div>
-                {platform.image && (
-                  <img 
-                    src={platform.image} 
-                    alt={platform.public_name || platform.name}
-                    className="h-10 w-10 object-contain mt-2"
-                  />
-                )}
+                className={`p-4 border rounded-lg cursor-pointer text-center transition-colors shadow-md hover:shadow-xl
+                  ${selectedPlatform?.id === platform.id ? `border-orange-500 ${theme.colors.background}` : `${theme.colors.hover} border-gray-200 dark:border-gray-700`}
+                `}
+              >
+                <div className="flex flex-col items-center gap-2">
+                  {platform.image ? (
+                    <img 
+                      src={platform.image} 
+                      alt={platform.public_name || platform.name}
+                      className="h-12 mx-auto mb-2 object-contain"
+                    />
+                  ) : (
+                    <div className="h-12 w-12 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center mb-2">
+                      <span className="text-2xl font-bold text-gray-500">{platform.public_name?.charAt(0) || platform.name.charAt(0)}</span>
+                    </div>
+                  )}
+                  <div className="text-sm font-medium text-center">
+                    {platform.public_name || platform.name}
+                  </div>
+                  {/* {platform.city && (
+                    <div className="text-xs text-gray-500 dark:text-gray-400 text-center">
+                      {platform.city}
+                    </div>
+                  )} */}
+                </div>
               </div>
             ))}
           </div>
           {platforms.length === 0 && !loading && (
-            <p className="text-gray-500">No betting platforms available.</p>
+            <p className="text-gray-500">Aucune plateforme de pari disponible.</p>
           )}
         </div>
       );
@@ -361,7 +348,7 @@ const renderStep = () => {
               onClick={() => setCurrentStep('selectId')}
               className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
             >
-              ← {t("Back to Bet IDs")}
+              ← {t("Retour aux Bet IDs")}
             </button>
             
           </div>
@@ -469,36 +456,57 @@ const renderStep = () => {
           </div>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-1">{t("Amount")}</label>
+              <label className="block text-sm font-medium mb-1">{t("Montant")}</label>
               <input
                 type="number"
                 value={formData.amount}
                 onChange={(e) => setFormData(prev => ({ ...prev, amount: e.target.value }))}
                 className="w-full p-2 border rounded"
-                placeholder={t("Enter amount")}
+                placeholder={t("Entrer le montant")}
+                min={selectedPlatform?.minimun_deposit}
+                max={selectedPlatform?.max_deposit}
               />
+              {selectedPlatform && (
+                <div className="mt-1 text-xs">
+                  <span className={
+                    formData.amount && Number(formData.amount) < Number(selectedPlatform.minimun_deposit)
+                      ? 'text-red-600 font-semibold'
+                      : 'text-gray-500 dark:text-gray-400'
+                  }>
+                    {t('Dépôt minimum')}: {selectedPlatform.minimun_deposit} FCFA
+                  </span>
+                  <span className="mx-2 text-gray-400">|</span>
+                  <span className={
+                    formData.amount && Number(formData.amount) > Number(selectedPlatform.max_deposit)
+                      ? 'text-red-600 font-semibold'
+                      : 'text-gray-500 dark:text-gray-400'
+                  }>
+                    {t('Dépôt maximum')}: {selectedPlatform.max_deposit} FCFA
+                  </span>
+                </div>
+              )}
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">{t("Phone Number")}</label>
+              <label className="block text-sm font-medium mb-1">{t("Numéro de téléphone")}</label>
               <input
                 type="tel"
                 value={formData.phoneNumber}
                 onChange={(e) => setFormData(prev => ({ ...prev, phoneNumber: e.target.value }))}
                 className="w-full p-2 border rounded"
-                placeholder={t("Enter phone number")}
+                placeholder={t("Entrer le numéro de téléphone")}
               />
             </div>
             {/* OTP input if required by network */}
             {selectedNetwork?.otp_required && (
               <div>
-                <label className="block text-sm font-medium mb-1">{t("OTP Code")}</label>
+                <label className="block text-sm font-medium mb-1">{t("Code OTP")}</label>
                 <input
                   type="text"
                   value={formData.otp_code}
                   onChange={e => setFormData(prev => ({ ...prev, otp_code: e.target.value }))}
                   required={selectedNetwork?.otp_required}
                   className="w-full p-2 border rounded"
-                  placeholder={t("Enter OTP code")}
+                  placeholder={t("Entrer le code OTP")}
                 />
                 <p className="text-xs text-gray-500 mt-1">{selectedNetwork?.info || ""}</p>
               </div>
@@ -509,14 +517,14 @@ const renderStep = () => {
                 onClick={() => setCurrentStep('addBetId')}
                 className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
               >
-                ← {t("Back")}
+                ← {t("Retour")}
               </button>
               <button
                 type="submit"
                 disabled={loading || (selectedNetwork?.otp_required && !formData.otp_code)}
                 className="px-6 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 disabled:opacity-50"
               >
-                {loading ? t('Processing...') : t('Submit')}
+                {loading ? t('Traitement...') : t('Soumettre')}
               </button>
             </div>
           </form>
@@ -527,7 +535,7 @@ const renderStep = () => {
 
   return (
     <div className="container mx-auto p-4 max-w-4xl">
-      <h1 className="text-2xl font-bold mb-6">{t("Deposit Funds")}</h1>
+      <h1 className="text-2xl font-bold mb-6">{t("Déposer des fonds")}</h1>
       <button
             onClick={() => window.history.back()}
             className="flex items-center text-md font-medium  dark:text-gray-300 dark:hover:text-white  px-4 py-2 rounded-lg shadow-sm transition-all duration-200"
@@ -535,7 +543,7 @@ const renderStep = () => {
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
-            {t("Back")}
+            {t("Retour")}
           </button>
       {/* Progress Steps */}
       <div className="flex justify-between mb-8 relative">
@@ -545,10 +553,10 @@ const renderStep = () => {
           const currentStepIndex = ['selectId', 'selectNetwork', 'addBetId', 'enterDetails'].indexOf(currentStep);
           
           switch (step) {
-            case 'selectId': stepName = t('Select Bet ID'); break;
-            case 'selectNetwork': stepName = t('Select Network'); break;
+            case 'selectId': stepName = t('Sélectionnez une plateforme de paris'); break;
+            case 'selectNetwork': stepName = t('Sélectionner le réseau'); break;
             case 'addBetId': stepName = t('Ajouter un Bet ID'); break;
-            case 'enterDetails': stepName = t('Enter Details'); break;
+            case 'enterDetails': stepName = t('Entrer les détails'); break;
           }
           
           const isCompleted = index < currentStepIndex;
@@ -584,7 +592,7 @@ const renderStep = () => {
       </div>
       
       {/* Main Content */}
-      <div className={`bg-gradient-to-br ${theme.colors.a_background} rounded-lg shadow-md p-6`}>
+      <div className={`bg-gradient-to-br ${theme.colors.c_background} rounded-lg shadow-md p-6`}>
         {error && (
           <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
             {error}
@@ -611,7 +619,7 @@ const renderStep = () => {
             <div className={`bg-white rounded-lg shadow-xl w-full max-w-md`}>
               <div className="p-6">
                 <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-lg font-semibold text-gray-600 dark:text-gray-400">{t("Transaction Details")}</h3>
+                  <h3 className="text-lg font-semibold text-gray-600 dark:text-gray-400">{t("Détails de la transaction")}</h3>
                   <button 
                     onClick={closeTransactionDetails}
                     className=""
@@ -624,12 +632,12 @@ const renderStep = () => {
                 
                 <div className="space-y-4">
                   <div className="flex justify-between items-center py-2 border-b dark:border-gray-700">
-                    <span className="text-gray-600 dark:text-gray-400">{t("Amount")}</span>
+                    <span className="text-gray-600 dark:text-gray-400">{t("Montant")}</span>
                     <span className="font-medium text-gray-600 dark:text-gray-400">{selectedTransaction.transaction.amount} FCFA</span>
                   </div>
                   
                   <div className="flex justify-between items-center py-2 border-b dark:border-gray-700">
-                    <span className="text-gray-600 dark:text-gray-400">{t("Status")}</span>
+                    <span className="text-gray-600 dark:text-gray-400">{t("Statut")}</span>
                     <span className={`font-medium ${
                       selectedTransaction.transaction.status === 'completed' 
                         ? 'text-green-600 dark:text-green-400'
@@ -643,7 +651,7 @@ const renderStep = () => {
                   </div>
                   
                   <div className="flex justify-between items-center py-2 border-b dark:border-gray-700">
-                    <span className="text-gray-600 dark:text-gray-400">{t("Reference")}</span>
+                    <span className="text-gray-600 dark:text-gray-400">{t("Référence")}</span>
                     <span className="font-medium text-gray-600 dark:text-gray-400">{selectedTransaction.transaction.reference}</span>
                   </div>
                   
@@ -656,7 +664,7 @@ const renderStep = () => {
 
                   {selectedTransaction.transaction.phone_number && (
                     <div className="flex justify-between items-center py-2 border-b dark:border-gray-700">
-                      <span className="text-gray-600 dark:text-gray-400">{t("Phone Number")}</span>
+                      <span className="text-gray-600 dark:text-gray-400">{t("Numéro de téléphone")}</span>
                       <span className="font-medium text-gray-600 dark:text-gray-400">{selectedTransaction.transaction.phone_number}</span>
                     </div>
                   )}
@@ -667,7 +675,7 @@ const renderStep = () => {
                     onClick={closeTransactionDetails}
                     className="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 transition-colors"
                   >
-                    {t("Close")}
+                    {t("Fermer")}
                   </button>
                 </div>
               </div>

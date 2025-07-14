@@ -9,6 +9,7 @@ import { Eye, EyeOff, User, Lock, Mail, ArrowRight, Phone } from 'lucide-react';
 import { initializeApp } from 'firebase/app';
 import { getMessaging, getToken } from 'firebase/messaging';
 import { useTheme } from './ThemeProvider';
+import { setAccessToken, setRefreshToken } from '../../utils/api';
 
 
 const API_URL = 'https://api.yapson.net/auth';
@@ -161,8 +162,8 @@ const { theme } = useTheme();
   
       if (isLogin) {
         const { refresh, access } = res.data;
-        localStorage.setItem('refreshToken', refresh);
-        localStorage.setItem('accessToken', access);
+        setRefreshToken(refresh);
+        setAccessToken(access);
         
         // Initialize FCM after successful login
         try {

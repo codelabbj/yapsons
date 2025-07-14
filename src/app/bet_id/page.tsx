@@ -5,9 +5,7 @@ import { useTranslation } from 'react-i18next';
 import DashboardHeader from '@/components/DashboardHeader';
 import { useTheme } from '@/components/ThemeProvider';
 import { CopyIcon, X } from 'lucide-react';
-// import axios from 'axios';
-
-const BASE_URL = 'https://api.yapson.net';
+import api from '../../../utils/api';
 
 interface App {
   id: string;
@@ -62,40 +60,21 @@ export default function BetIdsPage() {
 
   // Fetch user's saved bet IDs
   const fetchBetIds = async () => {
-    const token = localStorage.getItem('accessToken');
-    if (!token) {
-      console.error("Access token not found for fetching saved app IDs.");
-      setSavedAppIds([]);
-      return;
-    }
-
     try {
-      const response = await fetch(`${BASE_URL}/yapson/id_link`, {
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}` 
-        },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        let processedData: IdLink[] = [];
-        
-        if (Array.isArray(data)) {
-          processedData = data;
-        } else if (data && Array.isArray(data.results)) {
-          processedData = data.results;
-        } else if (data && Array.isArray(data.data)) {
-          processedData = data.data;
-        } else if (data && data.id && data.link && data.app_name) {
-          processedData = [data];
-        }
-        
-        setSavedAppIds(processedData);
-      } else {
-        console.error('Failed to fetch saved app IDs:', response.status);
-        setSavedAppIds([]);
+      const response = await api.get('/yapson/id_link');
+      let processedData: IdLink[] = [];
+      
+      if (Array.isArray(response.data)) {
+        processedData = response.data;
+      } else if (response.data && Array.isArray(response.data.results)) {
+        processedData = response.data.results;
+      } else if (response.data && Array.isArray(response.data.data)) {
+        processedData = response.data.data;
+      } else if (response.data && response.data.id && response.data.link && response.data.app_name) {
+        processedData = [response.data];
       }
+      
+      setSavedAppIds(processedData);
     } catch (error) {
       console.error('Error fetching bet IDs:', error);
       setSavedAppIds([]);
@@ -104,24 +83,9 @@ export default function BetIdsPage() {
 
   // Fetch available apps
   const fetchApps = async () => {
-    const token = localStorage.getItem('accessToken');
-    if (!token) return;
-
     try {
-      const response = await fetch(`${BASE_URL}/yapson/app_name`, {
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}` 
-        },
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        setApps(Array.isArray(data) ? data : []);
-      } else {
-        console.error('Failed to fetch apps:', response.status);
-        setApps([]);
-      }
+      const response = await api.get('/yapson/app_name');
+      setApps(Array.isArray(response.data) ? response.data : []);
     } catch (error) {
       console.error('Error fetching apps:', error);
       setApps([]);
@@ -135,19 +99,9 @@ export default function BetIdsPage() {
       console.log(t('Please select an app and enter a bet ID.'));
       return;
     }
-    const token = localStorage.getItem('accessToken');
-    if (!token) {
-      console.log(t('You must be logged in to add a bet ID.'));
-      return;
-    }
     try {
-      const response = await fetch(`${BASE_URL}/yapson/search-user?app_id=${selectedApp}&userid=${encodeURIComponent(newAppId.trim())}`, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-      const data = await response.json();
+      const response = await api.get(`/yapson/search-user?app_id=${selectedApp}&userid=${encodeURIComponent(newAppId.trim())}`);
+      const data = response.data;
       if (data && data.UserId && data.UserId !== 0) {
         setModal({ type: 'confirm', data });
         setPendingBetId({ link: newAppId.trim(), appId: selectedApp });
@@ -166,25 +120,19 @@ export default function BetIdsPage() {
     setError(null);
     setSuccess(null);
     const { appId, link: betId } = pendingBetId;
-    const token = localStorage.getItem('accessToken');
-    if (!token) {
-      setError(t('You must be logged in to add a bet ID.'));
-      return;
-    }
     try {
-      const response = await fetch(`${BASE_URL}/yapson/id_link`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          link: betId,
-          app_name_id: appId,
-        }),
+      const response = await api.post('/yapson/id_link', {
+        link: betId,
+        app_name_id: appId,
       });
-      if (!response.ok) {
-        const errorData = await response.json();
+      if (response.status === 201) { // Assuming 201 Created for successful POST
+        setSuccess(t('Bet ID added successfully!'));
+        setNewAppId('');
+        setSelectedApp('');
+        setPendingBetId(null);
+        await fetchBetIds();
+      } else {
+        const errorData = response.data;
         if (response.status === 400 && errorData) {
           const errorMessages = Object.entries(errorData)
             .map(([field, errors]) => {
@@ -198,11 +146,6 @@ export default function BetIdsPage() {
         }
         throw new Error(errorData.detail || t('Failed to add bet ID'));
       }
-      setSuccess(t('Bet ID added successfully!'));
-      setNewAppId('');
-      setSelectedApp('');
-      setPendingBetId(null);
-      await fetchBetIds();
     } catch (error: unknown) {
       if (error instanceof Error) {
         setError(error.message || t('Failed to add bet ID'));
@@ -221,24 +164,14 @@ export default function BetIdsPage() {
   const handleConfirmDeleteBetId = async () => {
     if (!modal || modal.type !== 'delete') return;
     const id = modal.id;
-    const token = localStorage.getItem('accessToken');
-    if (!token) {
-      setModal({ type: 'error', message: t('You must be logged in to delete a bet ID.') });
-      return;
-    }
     try {
-      const response = await fetch(`${BASE_URL}/yapson/id_link/${id}`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-      if (!response.ok) {
+      const response = await api.delete(`/yapson/id_link/${id}`);
+      if (response.status === 204) { // Assuming 204 No Content for successful DELETE
+        setSavedAppIds(prev => prev.filter(item => item.id !== id));
+        setModal(null);
+      } else {
         throw new Error(t('Failed to delete bet ID'));
       }
-      setSavedAppIds(prev => prev.filter(item => item.id !== id));
-      setModal(null);
     } catch (err) {
       const error = err as Error;
       setModal({ type: 'error', message: error.message || t('Failed to delete bet ID') });
@@ -330,7 +263,7 @@ export default function BetIdsPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h.01M 9 12 12h.01M16 12h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
-            <h2 className="text-xl font-bold">{t("Betting App IDs")}</h2>
+            <h2 className="text-xl font-bold">{t("IDs des applications de paris")}</h2>
           </div>
 
           {/* Success/Error Messages */}
@@ -350,7 +283,7 @@ export default function BetIdsPage() {
                   <select
                     value={selectedApp}
                     onChange={(e) => setSelectedApp(e.target.value)}
-                    className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                    className="w-full p-3 border text-gray-500 border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                   >
                     <option value="">{t("Select App")}</option>
                     {apps.map((app) => (

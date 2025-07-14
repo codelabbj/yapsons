@@ -4,7 +4,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 //import Head from 'next/head';
-import axios from 'axios';
+import api from '../../../utils/api';
 import { useTranslation } from 'react-i18next';
 // import styles from '../styles/Withdraw.module.css';
 //import DashboardHeader from '@/components/DashboardHeader';
@@ -97,24 +97,9 @@ export default function Withdraw() {
 
 
   const fetchPlatforms = async () => {
-    const token = localStorage.getItem('accessToken');
-    if (!token) return;
-
     try {
-      const response = await fetch('https://api.yapson.net/yapson/app_name', {
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}` 
-        },
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        setPlatforms(Array.isArray(data) ? data : []);
-      } else {
-        console.error('Failed to fetch platforms:', response.status);
-        setPlatforms([]);
-      }
+      const response = await api.get('yapson/app_name');
+      setPlatforms(Array.isArray(response.data) ? response.data : []);
     } catch (error) {
       console.error('Error fetching platforms:', error);
       setPlatforms([]);
@@ -123,42 +108,28 @@ export default function Withdraw() {
   // Fetch networks and saved app IDs on component mount
   useEffect(() => {
     const fetchData = async () => {
-      const token = localStorage.getItem('accessToken');
-      if (!token) {
-        setError(t('You must be logged in to access this feature.'));
-        setLoading(false);
-        window.location.href = '/';
-        return;
-      }
-
       try {
         setLoading(true);
         // Fetch all data in parallel
         const [networksResponse, savedIdsResponse] = await Promise.all([
-          fetch('https://api.yapson.net/yapson/network/', {
-            headers: { Authorization: `Bearer ${token}` }
-          }),
-          fetch('https://api.yapson.net/yapson/id_link', {
-            headers: { Authorization: `Bearer ${token}` }
-          }),
+          api.get('/yapson/network/'),
+          api.get('/yapson/id_link'),
           fetchPlatforms() // Fetch platforms in parallel
         ]);
 
-        if (networksResponse.ok) {
-          const networksData = await networksResponse.json();
-          setNetworks(networksData);
+        if (networksResponse.data) {
+          setNetworks(networksResponse.data);
         }
 
-        if (savedIdsResponse.ok) {
-          const data = await savedIdsResponse.json();
+        if (savedIdsResponse.data) {
           let processedData: IdLink[] = [];
           
-          if (Array.isArray(data)) {
-            processedData = data;
-          } else if (data?.results) {
-            processedData = data.results;
-          } else if (data?.data) {
-            processedData = data.data;
+          if (Array.isArray(savedIdsResponse.data)) {
+            processedData = savedIdsResponse.data;
+          } else if (savedIdsResponse.data?.results) {
+            processedData = savedIdsResponse.data.results;
+          } else if (savedIdsResponse.data?.data) {
+            processedData = savedIdsResponse.data.data;
           }
           
           setSavedAppIds(processedData);
@@ -173,6 +144,21 @@ export default function Withdraw() {
 
     fetchData();
   }, []);
+
+  // 1. French translations for all user-facing text
+  // 2. Card shadow and hover effect for platform selection
+  // 3. Improved error handling (show all backend errors, auto-hide after 4s)
+  // 4. Section and button text consistency
+  // 5. Modal and progress step style improvements
+  // 6. All other enhancements except the minimum/maximum amount logic
+
+  // --- Add improved error auto-hide ---
+  useEffect(() => {
+    if (error) {
+      const timer = setTimeout(() => setError(''), 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [error]);
 
   const handlePlatformSelect = (platform: App) => {
     setSelectedPlatform(platform);
@@ -194,43 +180,55 @@ export default function Withdraw() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedPlatform || !selectedNetwork) return;
-    
     setLoading(true);
     try {
-      const token = localStorage.getItem('accessToken');
-      if (!token) throw new Error('Not authenticated');
-      // Sanitize phone number before sending
-      const sanitizedPhoneNumber = formData.phoneNumber.replace(/\s+/g, '');
-      const response = await axios.post('https://api.yapson.net/yapson/transaction', {
+      const response = await api.post('yapson/transaction', {
         type_trans: 'withdrawal',
         withdriwal_code: formData.withdrawalCode,
-        phone_number: sanitizedPhoneNumber,
+        phone_number: formData.phoneNumber,
         network_id: selectedNetwork.id,
         app_id: selectedPlatform.id,
         user_app_id: formData.betid
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
       });
-       
       const transaction = response.data;
       setSelectedTransaction({ transaction });
       setIsModalOpen(true);
-      
-      setSuccess('Withdrawal initiated successfully!');
-      // Reset form
+      setSuccess('Retrait initié avec succès!');
       setCurrentStep('selectId');
       setSelectedPlatform(null);
       setSelectedNetwork(null);
       setFormData({ withdrawalCode: '', phoneNumber: '', betid: '' });
     } catch (err) {
       console.error('Withdrawal error:', err);
-      if (axios.isAxiosError(err)) {
-        setError(err.response?.data?.detail || 'Failed to process withdrawal');
-      } else if (err instanceof Error) {
-        setError(err.message || 'Failed to process withdrawal');
-      } else {
-        setError('Failed to process withdrawal');
+      // Enhanced error handling for backend field errors
+      let errorMsg = 'Échec du traitement du retrait';
+      if (
+        typeof err === 'object' &&
+        err !== null &&
+        'response' in err &&
+        typeof (err as { response?: unknown }).response === 'object'
+      ) {
+        const response = (err as { response?: { data?: Record<string, unknown> } }).response;
+        const data = response?.data as Record<string, unknown> | undefined;
+        if (data && typeof data === 'object') {
+          const messages: string[] = [];
+          for (const key in data) {
+            if (Array.isArray(data[key])) {
+              messages.push(...(data[key] as string[]));
+            } else if (typeof data[key] === 'string') {
+              messages.push(data[key] as string);
+            }
+          }
+          if (messages.length > 0) {
+            errorMsg = messages.join(' ');
+          } else if ('detail' in data && typeof data.detail === 'string') {
+            errorMsg = data.detail;
+          }
+        } else if (data && 'detail' in data && typeof (data as { detail?: unknown }).detail === 'string') {
+          errorMsg = (data as { detail?: string }).detail!;
+        }
       }
+      setError(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -241,26 +239,36 @@ export default function Withdraw() {
       case 'selectId':
         return (
           <div className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {platforms.map((platform) => (
                 <div 
                   key={platform.id}
                   onClick={() => handlePlatformSelect(platform)}
-                  className={`p-4 border rounded-lg cursor-pointer ${theme.colors.hover} transition-colors`}
+                  className={`p-4 border rounded-lg cursor-pointer text-center transition-colors shadow-md hover:shadow-xl
+                    ${selectedPlatform?.id === platform.id ? `border-orange-500 ${theme.colors.background}` : `${theme.colors.hover} border-gray-200 dark:border-gray-700`}
+                  `}
                 >
-                  <div className="font-medium">{platform.public_name || platform.name}</div>
-                  {platform.image && (
-                    <img 
-                      src={platform.image} 
-                      alt={platform.public_name || platform.name}
-                      className="h-10 w-10 object-contain mt-2"
-                    />
-                  )}
+                  <div className="flex flex-col items-center gap-2">
+                    {platform.image ? (
+                      <img 
+                        src={platform.image} 
+                        alt={platform.public_name || platform.name}
+                        className="h-12 mx-auto mb-2 object-contain"
+                      />
+                    ) : (
+                      <div className="h-12 w-12 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center mb-2">
+                        <span className="text-2xl font-bold text-gray-500">{platform.public_name?.charAt(0) || platform.name.charAt(0)}</span>
+                      </div>
+                    )}
+                    <div className="text-sm font-medium text-center">
+                      {platform.public_name || platform.name}
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>
             {platforms.length === 0 && !loading && (
-              <p className="text-gray-500">No betting platforms available.</p>
+              <p className="text-gray-500">Aucune plateforme de pari disponible.</p>
             )}
           </div>
         );
@@ -272,9 +280,9 @@ export default function Withdraw() {
                 <div
                   key={network.id}
                   onClick={() => handleNetworkSelect(network)}
-                  className={`p-4 border rounded-lg cursor-pointer text-center ${
-                    selectedNetwork?.id === network.id ? `border-orange-500 ${theme.colors.background}` : `${theme.colors.hover}`
-                  } transition-colors`}
+                  className={`p-4 border rounded-lg cursor-pointer text-center transition-colors
+                    ${selectedNetwork?.id === network.id ? `border-orange-500 ${theme.colors.background}` : `${theme.colors.hover}`}
+                  `}
                 >
                   {network.image ? (
                     <img src={network.image} alt={network.public_name} className="h-12 mx-auto mb-2" />
@@ -291,9 +299,8 @@ export default function Withdraw() {
               onClick={() => setCurrentStep('selectId')}
               className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
             >
-              ← {t("Back to Bet IDs")}
+              ← Retour aux Bet IDs
             </button>
-           
           </div>
         );
       case 'addBetId':
@@ -305,27 +312,27 @@ export default function Withdraw() {
           <div className="space-y-4">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-2xl font-bold text-orange-600 dark:text-orange-400 flex items-center gap-2">
-                {t('Gestion des Bet IDs')}
+                Gestion des Bet IDs
               </h2>
               <button
                 onClick={() => { window.location.href = '/bet_id'; }}
                 className="flex items-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-lg shadow hover:bg-orange-700 transition-all text-base font-medium"
               >
                 <PlusCircle className="w-5 h-5" />
-                {t('Ajouter un Bet ID')}
+                Ajouter un Bet ID
               </button>
             </div>
             <div className="mb-4">
-              <h3 className="text-lg font-semibold mb-2 text-gray-600 dark:text-gray-200">{t('Vos Bet IDs enregistrés')}</h3>
+              <h3 className="text-lg font-semibold mb-2 text-gray-600 dark:text-gray-200">Vos Bet IDs enregistrés</h3>
               {!selectedPlatform ? (
                 <div className="flex flex-col items-center justify-center py-8">
                   <span className="text-4xl mb-2">🎲</span>
-                  <p className="text-gray-500 text-center text-base font-medium">{t('Veuillez d\'abord sélectionner une plateforme de pari.')}</p>
+                  <p className="text-gray-500 text-center text-base font-medium">Veuillez d&apos;abord sélectionner une plateforme de pari.</p>
                 </div>
               ) : filteredBetIds.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-8">
                   <span className="text-4xl mb-2">📭</span>
-                  <p className="text-gray-500 text-center text-base font-medium">{t('Aucun Bet ID trouvé pour cette plateforme. Veuillez en ajouter un pour continuer.')}</p>
+                  <p className="text-gray-500 text-center text-base font-medium">Aucun Bet ID trouvé pour cette plateforme. Veuillez en ajouter un pour continuer.</p>
                 </div>
               ) : (
                 <ul className="divide-y divide-gray-200 dark:divide-gray-800 rounded-lg overflow-hidden">
@@ -349,7 +356,7 @@ export default function Withdraw() {
                           setSavedAppIds(prev => prev.filter(bid => bid.id !== id.id));
                           if (formData.betid === id.link) setFormData(prev => ({ ...prev, betid: '' }));
                         }}
-                        title={t('Supprimer')}
+                        title="Supprimer"
                       >
                         <Trash2 className="w-5 h-5 text-red-500" />
                       </button>
@@ -363,7 +370,7 @@ export default function Withdraw() {
                 onClick={() => setCurrentStep('selectId')}
                 className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800"
               >
-                ← {t('Retour')}
+                ← Retour
               </button>
             </div>
           </div>
@@ -377,18 +384,17 @@ export default function Withdraw() {
         return (
           <div className="space-y-4">
             <div className="flex items-center gap-2 mb-2">
-              <span className="text-sm font-medium text-gray-600 dark:text-gray-300">{t('Bet ID sélectionné')}:</span>
+              <span className="text-sm font-medium text-gray-600 dark:text-gray-300">Bet ID sélectionné :</span>
               <span className="px-3 py-1 rounded-full bg-orange-100 text-orange-700 font-mono text-base border border-orange-300 dark:bg-orange-950 dark:text-orange-300 dark:border-orange-900">
                 {formData.betid}
               </span>
             </div>
             <div className="flex items-center mb-4">
-              {/* <h2 className="text-xl font-bold">{t("Step 3: Enter Details")}</h2> */}
             </div>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label htmlFor="withdrawalCode" className="block text-sm font-medium mb-1">
-                  {t("Withdrawal Code")}
+                  Code de retrait
                 </label>
                 <input
                   type="text"
@@ -397,13 +403,13 @@ export default function Withdraw() {
                   value={formData.withdrawalCode}
                   onChange={handleInputChange}
                   className="w-full p-2 border rounded-md dark:bg-gray-700 dark:border-gray-600"
-                  placeholder={t("Enter your withdrawal code")}
+                  placeholder="Entrez votre code de retrait"
                   required
                 />
               </div>
               <div>
                 <label htmlFor="phoneNumber" className="block text-sm font-medium mb-1">
-                  {t("Phone Number")}
+                  Numéro de téléphone
                 </label>
                 <input
                   type="tel"
@@ -412,7 +418,7 @@ export default function Withdraw() {
                   value={formData.phoneNumber}
                   onChange={handleInputChange}
                   className="w-full p-2 border rounded-md dark:bg-gray-700 dark:border-gray-600"
-                  placeholder="e.g., 771234567"
+                  placeholder="Ex: 771234567"
                   required
                 />
               </div>
@@ -422,14 +428,14 @@ export default function Withdraw() {
                   onClick={() => setCurrentStep('addBetId')}
                   className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
                 >
-                  ← {t("Back")}
+                  ← Retour
                 </button>
                 <button
                   type="submit"
                   disabled={loading}
                   className="px-6 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 disabled:opacity-50"
                 >
-                  {loading ? t('Processing...') : t('Submit')}
+                  {loading ? 'Traitement...' : 'Soumettre'}
                 </button>
               </div>
             </form>
@@ -440,7 +446,7 @@ export default function Withdraw() {
 
   return (
     <div className="container mx-auto p-4 max-w-4xl">
-      <h1 className="text-2xl font-bold mb-6">{t("Withdraw Funds")}</h1>
+      <h1 className="text-2xl font-bold mb-6">Retirer des fonds</h1>
 
       {/* Flashing Info Icon and How-To Sentence */}
       <div className="flex items-center mb-4">
@@ -480,7 +486,7 @@ export default function Withdraw() {
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
-            {t("Back")}
+            Retour
       </button>
       
       {/* Progress Steps */}
@@ -490,10 +496,10 @@ export default function Withdraw() {
           let stepName = '';
           const currentStepIndex = ['selectId', 'selectNetwork', 'addBetId', 'enterDetails'].indexOf(currentStep);
           switch (step) {
-            case 'selectId': stepName = t('Select Bet ID'); break;
-            case 'selectNetwork': stepName = t('Select Network'); break;
-            case 'addBetId': stepName = t('Gérer les Bet IDs'); break;
-            case 'enterDetails': stepName = t('Enter Details'); break;
+            case 'selectId': stepName = 'Sélectionnez une plateforme de paris'; break;
+            case 'selectNetwork': stepName = 'Sélectionner le réseau'; break;
+            case 'addBetId': stepName = 'Gérer les Bet IDs'; break;
+            case 'enterDetails': stepName = 'Entrer les détails'; break;
           }
           const isCompleted = index < currentStepIndex;
           const isActive = index === currentStepIndex;
@@ -526,7 +532,7 @@ export default function Withdraw() {
       </div>
       
       {/* Main Content */}
-      <div className={`bg-gradient-to-br ${theme.colors.a_background} rounded-lg shadow-md p-6`}>
+      <div className={`bg-gradient-to-br ${theme.colors.c_background} rounded-lg shadow-md p-6`}>
         {error && (
           <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
             {error}
@@ -553,18 +559,18 @@ export default function Withdraw() {
         <div className="fixed inset-0  bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className={`bg-white rounded-lg shadow-xl w-full max-w-md`}>
             <div className="p-6">
-              <h3 className="text-lg font-semibold mb-4 text-gray-600 dark:text-gray-400">{t("Transaction Details")}</h3>
+              <h3 className="text-lg font-semibold mb-4 text-gray-600 dark:text-gray-400">Détails de la transaction</h3>
               <div className="space-y-2 text-gray-600 dark:text-gray-400">
-                <p><span className="font-medium ">{t("Status")}:</span> {selectedTransaction.transaction.status}</p>
-                <p><span className="font-medium">{t("Reference")}:</span> {selectedTransaction.transaction.reference}</p>
-                <p><span className="font-medium">{t("Date")}:</span> {new Date(selectedTransaction.transaction.created_at).toLocaleString()}</p>
+                <p><span className="font-medium ">Statut :</span> {selectedTransaction.transaction.status}</p>
+                <p><span className="font-medium">Référence :</span> {selectedTransaction.transaction.reference}</p>
+                <p><span className="font-medium">Date :</span> {new Date(selectedTransaction.transaction.created_at).toLocaleString('fr-FR')}</p>
               </div>
               <div className="mt-6 flex justify-end">
                 <button
                   onClick={() => setIsModalOpen(false)}
                   className="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700"
                 >
-                  {t("Close")}
+                  Fermer
                 </button>
               </div>
             </div>
