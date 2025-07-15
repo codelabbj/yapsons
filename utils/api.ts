@@ -40,14 +40,14 @@ api.interceptors.request.use(
 
 // Response interceptor: handle token refresh
 let isRefreshing = false;
-let failedQueue: any[] = [];
+let failedQueue: { resolve: (token: string) => void; reject: (error: unknown) => void }[] = [];
 
-function processQueue(error: any, token: string | null = null) {
+function processQueue(error: unknown, token: string | null = null) {
   failedQueue.forEach((prom) => {
     if (error) {
       prom.reject(error);
     } else {
-      prom.resolve(token);
+      prom.resolve(token || '');
     }
   });
   failedQueue = [];
@@ -65,7 +65,7 @@ api.interceptors.response.use(
     ) {
       if (isRefreshing) {
         // Queue the request until refresh is done
-        return new Promise(function (resolve, reject) {
+        return new Promise<string>((resolve, reject) => {
           failedQueue.push({ resolve, reject });
         })
           .then((token: string) => {
