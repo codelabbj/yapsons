@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { ArrowDownLeft, ArrowUpRight, RotateCw, X, Activity, Copy, MoreHorizontal, Pause, Play } from 'lucide-react';
+import { ArrowDownLeft, ArrowUpRight, RotateCw, X, Activity, Copy} from 'lucide-react';
 //import Footer from '../components/footer';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from './ThemeProvider';
@@ -110,10 +110,10 @@ export default function TransactionHistory() {
   const [page, setPage] = useState(1);
   const [selectedTransaction, setSelectedTransaction] = useState<HistoricItem | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [lastFetchTime, setLastFetchTime] = useState<string | null>(null);
+  // const [lastFetchTime, setLastFetchTime] = useState<string | null>(null);
   const [isRealTimeEnabled, setIsRealTimeEnabled] = useState(true);
   const [isNewTransaction, setIsNewTransaction] = useState<Record<string, boolean>>({});
-  const [wsStatus, setWsStatus] = useState('disconnected');
+  // const [wsStatus, setWsStatus] = useState('disconnected');
   const [animateHeader, setAnimateHeader] = useState(false);
   const {t} = useTranslation();
   const { theme } = useTheme();
@@ -189,7 +189,7 @@ export default function TransactionHistory() {
     if (!token) {
       setError('Authentication required for real-time updates');
       console.log(error);
-      setWsStatus('error');
+      // setWsStatus('error');
       window.location.href = '/';
       return;
     }
@@ -211,7 +211,7 @@ export default function TransactionHistory() {
       webSocketRef.current.onopen = () => {
         clearTimeout(connectionTimeout);
         console.log('WebSocket connected successfully');
-        setWsStatus('connected');
+        // setWsStatus('connected');
         setError(null);
         webSocketReconnectAttempts.current = 0;
         startPingInterval();
@@ -232,7 +232,7 @@ export default function TransactionHistory() {
     } catch (error) {
       console.error('WebSocket setup failed:', error);
       setError(error instanceof Error ? error.message : 'Failed to establish connection');
-      setWsStatus('error');
+      // setWsStatus('error');
       handleConnectionFailure('Failed to initialize WebSocket');
     }
   };
@@ -246,7 +246,7 @@ export default function TransactionHistory() {
     if (reconnectTimeoutRef.current) {
       clearTimeout(reconnectTimeoutRef.current);
     }
-    setWsStatus('disconnected');
+    // setWsStatus('disconnected');
   };
 
   const startPingInterval = () => {
@@ -272,7 +272,7 @@ export default function TransactionHistory() {
 
   const handleConnectionFailure = (message: string) => {
     console.error(message);
-    setWsStatus('error');
+    // setWsStatus('error');
     setError(message);
 
     // Implement exponential backoff
@@ -347,7 +347,7 @@ export default function TransactionHistory() {
           }
       }
 
-      setLastFetchTime(new Date().toISOString());
+      // setLastFetchTime(new Date().toISOString());
     } catch (error) {
       console.error('Error processing message:', error);
     }
@@ -524,7 +524,7 @@ export default function TransactionHistory() {
       console.log('Fetched Transactions:', data);
 
       // Update last fetch time
-      setLastFetchTime(new Date().toISOString());
+      // setLastFetchTime(new Date().toISOString());
 
       // Process the fetched transactions
       if (pageNumber === 1) {
@@ -669,12 +669,12 @@ export default function TransactionHistory() {
   // };
 
   // Toggle real-time updates
-  const toggleRealTimeUpdates = () => {
-    const newState = !isRealTimeEnabled;
-    setIsRealTimeEnabled(newState);
-    // Update localStorage preference
-    localStorage.setItem('realTimeEnabled', newState.toString());
-  };
+  // const toggleRealTimeUpdates = () => {
+  //   const newState = !isRealTimeEnabled;
+  //   setIsRealTimeEnabled(newState);
+  //   // Update localStorage preference
+  //   localStorage.setItem('realTimeEnabled', newState.toString());
+  // };
 
   // Function to refresh transactions manually
   const refreshTransactions = () => {
@@ -898,7 +898,7 @@ const StatusBadge = ({ status }: { status: string }) => {
             )}
 
               {/* Link to All Transactions Page */}
-              {!loading && transactions.length > 0 && ( // Only show link if there are transactions
+              {/* {!loading && transactions.length > 0 && ( // Only show link if there are transactions
                 <div className="flex justify-center mt-4">
                   <Link href="/all_transactions" passHref>
                     <button
@@ -909,18 +909,18 @@ const StatusBadge = ({ status }: { status: string }) => {
                     </button>
                   </Link>
                 </div>
-              )}
+              )} */}
 
               {/* Last updated info */}
-              {lastFetchTime && (
+              {/* {lastFetchTime && (
                 <div className="text-xs text-center text-gray-500 mt-4">
                   {t("Last updated")}: {formatDate(lastFetchTime)}
                 </div>
-              )}
+              )} */}
         </div>
 
         {/* WebSocket connection status */}
-        <div className="fixed bottom-4 right-4 flex items-center gap-2 px-3 py-1.5 bg-gray-800/80 rounded-full backdrop-blur-sm text-xs">
+        {/* <div className="fixed bottom-4 right-4 flex items-center gap-2 px-3 py-1.5 bg-gray-800/80 rounded-full backdrop-blur-sm text-xs">
           <div className={`w-2 h-2 rounded-full ${
             wsStatus === 'connected' ? 'bg-green-500' :
             wsStatus === 'error' ? 'bg-red-500' : 'bg-amber-500'
@@ -939,7 +939,7 @@ const StatusBadge = ({ status }: { status: string }) => {
               <Play size={14} className="text-gray-400 hover:text-white transition-colors" />
             }
           </button>
-        </div>
+        </div> */}
 
         {/* Transaction detail modal */}
         {isModalOpen && selectedTransaction && (
