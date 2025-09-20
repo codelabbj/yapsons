@@ -134,7 +134,7 @@ export default function Withdraw() {
         setLoading(true);
         // Fetch all data in parallel
         const [networksResponse, savedIdsResponse] = await Promise.all([
-          api.get('/yapson/network/'),
+          api.get('/yapson/network/?type=withdrawal'),
           api.get('/yapson/id_link'),
           fetchPlatforms() // Fetch platforms in parallel
         ]);
