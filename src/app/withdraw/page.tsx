@@ -17,6 +17,8 @@ interface Network {
   name: string;
   public_name?: string;
   image?: string;
+  with_fee?: boolean;
+  fee_percent?: number;
 }
 
 interface App {
@@ -84,11 +86,14 @@ export default function Withdraw() {
     public_name?: string; 
     image?: string;
     withdrawal_message?: string;
+    with_fee?: boolean;
+    fee_percent?: number;
   } | null>(null);
   const [formData, setFormData] = useState({
     withdrawalCode: '',
     phoneNumber: '',
     betid: '',
+    amount: '',
   });
   
   const [networks, setNetworks] = useState<{ 
@@ -97,6 +102,8 @@ export default function Withdraw() {
     public_name?: string; 
     image?: string;
     withdrawal_message?: string;
+    with_fee?: boolean;
+    fee_percent?: number;
   }[]>([]);
   const [savedAppIds, setSavedAppIds] = useState<IdLink[]>([]);
   const [loading, setLoading] = useState(false);
@@ -115,8 +122,31 @@ export default function Withdraw() {
     network_id: string;
     app_id: string;
     user_app_id: string;
+    amount: string;
   } | null>(null);
+  
+  // Fee calculation state
+  const [calculatedFee, setCalculatedFee] = useState<number>(0);
+  const [netAmount, setNetAmount] = useState<number>(0);
 
+  // Calculate fee and net amount when amount or network changes
+  useEffect(() => {
+    if (formData.amount && selectedNetwork?.with_fee && selectedNetwork?.fee_percent) {
+      const amount = parseFloat(formData.amount);
+      if (!isNaN(amount) && amount > 0) {
+        const fee = (amount * selectedNetwork.fee_percent) / 100;
+        const net = amount - fee;
+        setCalculatedFee(fee);
+        setNetAmount(net);
+      } else {
+        setCalculatedFee(0);
+        setNetAmount(0);
+      }
+    } else {
+      setCalculatedFee(0);
+      setNetAmount(0);
+    }
+  }, [formData.amount, selectedNetwork?.with_fee, selectedNetwork?.fee_percent]);
 
   const fetchPlatforms = async () => {
     try {
@@ -215,7 +245,8 @@ export default function Withdraw() {
       phone_number: formData.phoneNumber,
       network_id: selectedNetwork.id,
       app_id: selectedPlatform.id,
-      user_app_id: formData.betid
+      user_app_id: formData.betid,
+      amount: formData.amount // Send the original amount, not the fee-deducted amount
     };
 
     // Show modal if withdrawal_message exists (regardless of withdrawal_api value)
@@ -236,6 +267,7 @@ export default function Withdraw() {
     network_id: string;
     app_id: string;
     user_app_id: string;
+    amount: string;
   }) => {
     setLoading(true);
     try {
@@ -247,7 +279,9 @@ export default function Withdraw() {
       setCurrentStep('selectId');
       setSelectedPlatform(null);
       setSelectedNetwork(null);
-      setFormData({ withdrawalCode: '', phoneNumber: '', betid: '' });
+      setFormData({ withdrawalCode: '', phoneNumber: '', betid: '', amount: '' });
+      setCalculatedFee(0);
+      setNetAmount(0);
     } catch (err) {
       console.error('Withdrawal error:', err);
       // Enhanced error handling for backend field errors
@@ -446,6 +480,24 @@ export default function Withdraw() {
         }
         return (
           <div className="space-y-4">
+            {/* App Location Information */}
+            {selectedPlatform && (
+              <div className="flex justify-between items-center mb-4 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium text-gray-600 dark:text-gray-300">Ville:</span>
+                  <span className="px-2 py-1 rounded bg-blue-100 text-blue-700 font-medium text-sm dark:bg-blue-950 dark:text-blue-300">
+                    {selectedPlatform.city || 'N/A'}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium text-gray-600 dark:text-gray-300">Rue:</span>
+                  <span className="px-2 py-1 rounded bg-green-100 text-green-700 font-medium text-sm dark:bg-green-950 dark:text-green-300">
+                    {selectedPlatform.street || 'N/A'}
+                  </span>
+                </div>
+              </div>
+            )}
+            
             <div className="flex items-center gap-2 mb-2">
               <span className="text-sm font-medium text-gray-600 dark:text-gray-300">Bet ID sélectionné :</span>
               <span className="px-3 py-1 rounded-full bg-orange-100 text-orange-700 font-mono text-base border border-orange-300 dark:bg-orange-950 dark:text-orange-300 dark:border-orange-900">
@@ -455,6 +507,48 @@ export default function Withdraw() {
             <div className="flex items-center mb-4">
             </div>
             <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label htmlFor="amount" className="block text-sm font-medium mb-1">
+                  Montant à retirer
+                </label>
+                <input
+                  type="number"
+                  id="amount"
+                  name="amount"
+                  value={formData.amount}
+                  onChange={handleInputChange}
+                  className="w-full p-2 border rounded-md dark:bg-gray-700 dark:border-gray-600"
+                  placeholder="Entrez le montant"
+                  required
+                  min="0"
+                  step="0.01"
+                />
+              </div>
+              
+              {/* Fee Display */}
+              {selectedNetwork?.with_fee && selectedNetwork?.fee_percent && formData.amount && (
+                <div className="bg-orange-50 dark:bg-orange-950 border border-orange-200 dark:border-orange-800 rounded-lg p-4">
+                  <h4 className="text-sm font-semibold text-orange-800 dark:text-orange-200 mb-2">
+                    Calcul des frais
+                  </h4>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 dark:text-gray-300">Montant saisi:</span>
+                      <span className="font-medium">{parseFloat(formData.amount).toLocaleString('fr-FR')} FCFA</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 dark:text-gray-300">Frais ({selectedNetwork.fee_percent}%):</span>
+                      <span className="font-medium text-red-600 dark:text-red-400">-{calculatedFee.toLocaleString('fr-FR')} FCFA</span>
+                    </div>
+                    <hr className="border-orange-200 dark:border-orange-700" />
+                    <div className="flex justify-between font-semibold">
+                      <span className="text-orange-800 dark:text-orange-200">Montant à recevoir:</span>
+                      <span className="text-green-600 dark:text-green-400">{netAmount.toLocaleString('fr-FR')} FCFA</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
               <div>
                 <label htmlFor="withdrawalCode" className="block text-sm font-medium mb-1">
                   Code de retrait
