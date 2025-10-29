@@ -150,7 +150,7 @@ export default function Withdraw() {
 
   const fetchPlatforms = async () => {
     try {
-      const response = await api.get('yapson/app_name');
+      const response = await api.get('yapson/app_name?filter_type=deposit');
       setPlatforms(Array.isArray(response.data) ? response.data : []);
     } catch (error) {
       console.error('Error fetching platforms:', error);
