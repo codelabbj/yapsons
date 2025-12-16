@@ -2,17 +2,20 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   /* config options here */
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
+  turbopack: {},
   images: {
-    domains: ["api.yapson.net"],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'api.yapson.net',
+      },
+    ],
   },
   // Add experimental features to improve chunk loading
   experimental: {
     optimizePackageImports: ['lucide-react', 'react-i18next'],
   },
-  // Improve chunk splitting and loading
+  // Use webpack explicitly to maintain compatibility with existing webpack config
   webpack: (config, { dev, isServer }) => {
     // Optimize chunk splitting for production
     if (!dev && !isServer) {
@@ -34,11 +37,11 @@ const nextConfig: NextConfig = {
           },
         },
       };
-      
+
       // Improve chunk loading reliability
       config.optimization.runtimeChunk = 'single';
     }
-    
+
     return config;
   },
   // Add output configuration for better chunk handling
@@ -47,8 +50,6 @@ const nextConfig: NextConfig = {
   productionBrowserSourceMaps: false,
   // Add compression for better performance
   compress: true,
-  // Improve build performance
-  swcMinify: true,
 };
 
 export default nextConfig;
