@@ -230,9 +230,8 @@ interface Slide {
   // Add any other properties your API returns
 }
 
-interface Ad {
-  enable: boolean;
-  // ... 其他可能的属性
+interface Ad extends Omit<Slide, 'id' | 'created_at'> {
+  // API response might have additional fields, but we only need enable and Slide properties
 }
 
 
@@ -263,7 +262,15 @@ const SlidingHero = ({ baseUrl = 'https://api.yapson.net' }) => {
         const data = await response.json();
         // Ensure data.results is an array and contains objects matching Slide interface
         if (Array.isArray(data.results)) {
-            const enabledAds: Slide[] = data.results.filter((ad: Ad) => ad.enable); // Use 'any' temporarily if structure is uncertain, or refine filter type
+            const enabledAds: Slide[] = data.results
+                .filter((ad: Ad) => ad.enable)
+                .map((ad: Ad, index: number) => ({
+                    ...ad,
+                    image: (ad.image && ad.image.startsWith('http') && !ad.image.includes('api.yapson.net'))
+                        ? ad.image
+                        : index === 0 ? '/HeroImage.jpg' : '/HeroImage2.jpg' // Use different fallback images
+                }));
+            console.log('Loaded advertisements:', enabledAds); // Debug log
             setSlides(enabledAds);
         } else {
             console.error('API response results is not an array:', data);
@@ -331,13 +338,19 @@ const SlidingHero = ({ baseUrl = 'https://api.yapson.net' }) => {
     setImageLoaded(prev => ({ ...prev, [slideId]: true }));
   }, []);
 
-  // Handle image error - use Next.js Image onError signature
-  const handleImageError = useCallback((slideId: string, e: React.SyntheticEvent<HTMLImageElement, Event>) => {
-      console.error(`Failed to load image for slide ${slideId}:`, e);
-      // Optionally set a fallback image source here if needed, though Next/Image handles some fallbacks
-      // e.currentTarget.src = 'fallback-image-url.jpg'; // Example fallback
-      setImageLoaded(prev => ({ ...prev, [slideId]: true })); // Mark as loaded even on error to show fallback/broken image
-  }, []);
+  // Handle image error - for Next.js Image component
+  const handleImageError = useCallback((slideId: string) => (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+      const failedSlide = slides.find(s => s.id === slideId);
+
+      // Only log errors for non-API images (to avoid spam from api.yapson.net DNS issues)
+      if (!failedSlide?.image?.includes('api.yapson.net')) {
+        console.error(`Failed to load image for slide ${slideId}:`, e);
+        console.error(`Image URL that failed:`, failedSlide?.image);
+      }
+
+      // Mark as loaded even on error to prevent infinite loading state
+      setImageLoaded(prev => ({ ...prev, [slideId]: true }));
+  }, [slides]);
 
 
   if (loading) {
@@ -386,7 +399,7 @@ const SlidingHero = ({ baseUrl = 'https://api.yapson.net' }) => {
                   imageLoaded[slide.id] ? 'opacity-100' : 'opacity-0'
                 }`}
                 onLoad={() => handleImageLoad(slide.id)}
-                onError={(e) => handleImageError(slide.id, e)} // Use the new error handler
+                onError={handleImageError(slide.id)} // Use the new error handler
                 sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" // Define appropriate sizes
                 priority={index === 0} // Prioritize loading the first image
               />

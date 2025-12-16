@@ -5,10 +5,8 @@ const nextConfig: NextConfig = {
   turbopack: {},
   images: {
     remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: 'api.yapson.net',
-      },
+      // Removed api.yapson.net since domain is not resolving
+      // Add other image domains as needed
     ],
   },
   // Add experimental features to improve chunk loading
