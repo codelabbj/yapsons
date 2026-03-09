@@ -1,14 +1,12 @@
 @import "tailwindcss";
-
-
-@tailwind utilities;
+@variant dark (&:where(.dark, .dark *));
 
 :root {
   /* Default light theme variables */
   --color-primary: #0070f3;
   --color-secondary: #0ea5e9;
   --color-background: #ffffff;
-  --color-text: #1f2937;
+  --color-text: #000000;
   --color-accent: #8b5cf6;
   
   --border-radius: 0.5rem;

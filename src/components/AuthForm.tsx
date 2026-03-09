@@ -9,7 +9,7 @@ import { Eye, EyeOff, User, Lock, Mail, ArrowRight, Phone } from 'lucide-react';
 import { initializeApp } from 'firebase/app';
 import { getMessaging, getToken } from 'firebase/messaging';
 import { useTheme } from './ThemeProvider';
-import { setAccessToken, setRefreshToken } from '../../utils/api';
+import api, { setAccessToken, setRefreshToken } from '../../utils/api';
 
 
 const API_URL = 'https://api.yapson.net/auth';
@@ -154,8 +154,8 @@ const { theme } = useTheme();
   
   
     try {
-      const res = await axios.post(
-        `${API_URL}/${isLogin ? 'login' : 'registration'}`,
+      const res = await api.post(
+        `${isLogin ? '/auth/login' : '/auth/registration'}`,
         payload,
         { headers: { 'Content-Type': 'application/json' } }
       );
@@ -170,8 +170,8 @@ const { theme } = useTheme();
           const fcmToken = await initializeFCM();
           if (fcmToken) {
             // Optionally send the token to your backend
-            await axios.post(
-              `https://api.yapson.net/yapson/devices/`,
+            await api.post(
+              `/yapson/devices/`,
               { registration_id: fcmToken,
                 type: 'web',
                },
@@ -215,7 +215,7 @@ const { theme } = useTheme();
           return;
         }
         
-        await axios.post(`${API_URL}/send_otp`, { email }, {
+        await api.post(`/auth/send_otp`, { email }, {
           headers: { 'Content-Type': 'application/json' }
         });
         
@@ -256,7 +256,7 @@ const { theme } = useTheme();
           confirm_new_password: confirmNewPassword
         };
         
-        await axios.post(`${API_URL}/reset_password`, resetPayload, {
+        await api.post(`/auth/reset_password`, resetPayload, {
           headers: { 'Content-Type': 'application/json' }
         });
         

@@ -47,7 +47,7 @@ const themes: Record<ThemeMode, Theme> = {
       c_background: 'from-gray-50 to-gray-100',
       a_background: 'from-orange-50 to-gray-100',
       background: '#ffffff',
-      text: '#1f2937',
+      text: '#000000',
       accent: '#8b5cf6',
       hover: 'hover:bg-gray-100'
     },
@@ -73,7 +73,7 @@ const themes: Record<ThemeMode, Theme> = {
       c_background: 'from-gray-900 to-gray-800',
       a_background: 'from-gray-900 to-orange-800',
       background: '#111827',
-      text: '#f9fafb',
+      text: '#ffffff',
       accent: '#a78bfa',
       hover: 'hover:bg-gray-700'
     },
@@ -135,6 +135,12 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     });
     // Set data attribute for CSS selectors
     document.documentElement.setAttribute('data-theme', themeMode);
+    // Toggle 'dark' class for Tailwind dark: utilities
+    if (themeMode === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
     // Save to localStorage
     localStorage.setItem('theme', themeMode);
   }, [themeMode]);
