@@ -30,9 +30,8 @@ export default function Dashboard() {
 
   const chatbotEnabled = Boolean(settings?.use_chatbot);
   const telegramEnabled = Boolean(settings?.use_telegram);
-  const whatsappEnabled = Boolean(settings?.use_whatsapp);
   const whatsappUrl = formatWhatsAppLink(
-    settings?.whatsapp_phone,
+    settings?.whatsapp_link || settings?.whatsapp_phone,
     settings?.whatsapp_phone_indi
   );
   const telegramUrl = formatTelegramLink(
@@ -40,7 +39,7 @@ export default function Dashboard() {
   );
   const showContactFab =
     chatbotEnabled ||
-    (whatsappEnabled && Boolean(whatsappUrl)) ||
+    Boolean(whatsappUrl) ||
     (telegramEnabled && Boolean(telegramUrl));
 
   useEffect(() => {
@@ -185,7 +184,7 @@ export default function Dashboard() {
                       </div>
                     </button>
                   )}
-                  {whatsappEnabled && whatsappUrl ? (
+                  {whatsappUrl ? (
                     <button
                       type="button"
                       className="w-full flex items-center gap-3 rounded-lg px-3 py-3 text-left hover:bg-green-50 dark:hover:bg-green-950/30 transition"

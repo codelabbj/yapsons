@@ -1,11 +1,18 @@
-/** Helpers liens support (même pattern TurainCash / Blaffa). */
+/** Lien WhatsApp support Yapson (click-to-chat), pas un numéro. */
+export const DEFAULT_WHATSAPP_LINK = 'https://wa.me/message/25W53A4ZCBAGC1'
 
-export function formatWhatsAppLink(phone?: string | null, indicator?: string | null): string {
-  if (!phone) return ""
-  const cleanIndicator = (indicator || "").replace(/\D/g, "")
-  const cleanPhone = String(phone).replace(/\D/g, "")
-  if (!cleanPhone) return ""
-  return `https://wa.me/${cleanIndicator}${cleanPhone}`
+/** Helpers liens support. Yapson utilise un lien configuré, pas un numéro. */
+export function formatWhatsAppLink(phoneOrLink?: string | null, indicator?: string | null): string {
+  const raw = (phoneOrLink || '').trim()
+  if (raw.startsWith('http') || raw.includes('wa.me') || raw.includes('whatsapp.com')) {
+    return raw.startsWith('http') ? raw : `https://${raw.replace(/^\/+/, '')}`
+  }
+  const cleanPhone = raw.replace(/\D/g, '')
+  if (cleanPhone) {
+    const cleanIndicator = (indicator || '').replace(/\D/g, '')
+    return `https://wa.me/${cleanIndicator}${cleanPhone}`
+  }
+  return DEFAULT_WHATSAPP_LINK
 }
 
 export function formatTelegramLink(telegram?: string | null): string {

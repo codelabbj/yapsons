@@ -11,6 +11,7 @@ export type YapsonSetting = {
   use_sms?: boolean
   whatsapp_phone?: string | null
   whatsapp_phone_indi?: string | null
+  whatsapp_link?: string | null
   telegram?: string | null
   telegram_bot_username?: string | null
   [key: string]: unknown
