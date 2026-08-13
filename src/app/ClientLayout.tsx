@@ -3,6 +3,8 @@
 import React, { useEffect } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
 import i18n from '../../i18n';
+import { SettingsProvider } from '@/lib/settings-context';
+import NotificationChannelDialog from '@/components/NotificationChannelDialog';
 
 function ClientLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -17,7 +19,12 @@ function ClientLayout({ children }: { children: React.ReactNode }) {
     document.documentElement.lang = lang;
   }, [pathname, searchParams]);
 
-  return <>{children}</>;
+  return (
+    <SettingsProvider>
+      {children}
+      <NotificationChannelDialog />
+    </SettingsProvider>
+  );
 }
 
 export default ClientLayout;

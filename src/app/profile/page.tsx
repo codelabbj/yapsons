@@ -1036,6 +1036,7 @@ import DashboardHeader from '@/components/DashboardHeader';
 import { useTheme } from '@/components/ThemeProvider';
 import { toast } from 'react-toastify'; // Using react-toastify for notifications
 import 'react-toastify/dist/ReactToastify.css'; // Import toastify styles
+import NotificationChannelsPanel from '@/components/NotificationChannelsPanel';
 
 const BASE_URL = 'https://api.yapson.net';
 
@@ -1677,6 +1678,11 @@ export default function Profile() {
                 </svg>
                 {t("Update Details")}
               </button>
+            </div>
+
+            {/* Notification channels */}
+            <div className={`bg-gradient-to-br ${theme.colors.a_background} rounded-xl shadow-sm p-6 mb-20`}>
+              <NotificationChannelsPanel mode="profile" showHeader />
             </div>
 
             {/* Password Section */}
